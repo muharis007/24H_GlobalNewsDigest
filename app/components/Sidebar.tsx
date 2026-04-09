@@ -7,13 +7,20 @@ interface SidebarProps {
   countries: Country[];
   selectedCountry: string | null;
   onSelectCountry: (code: string | null) => void;
+  favoriteCountries?: string[];
 }
 
-export default function Sidebar({ countries, selectedCountry, onSelectCountry }: SidebarProps) {
+export default function Sidebar({ countries, selectedCountry, onSelectCountry, favoriteCountries = [] }: SidebarProps) {
   const selected = countries.find((c) => c.code === selectedCountry);
 
-  // Sort countries by story count (descending)
-  const sorted = [...countries].sort((a, b) => b.stories.length - a.stories.length);
+  // Sort countries: favorites first, then by story count (descending)
+  const favSet = new Set(favoriteCountries);
+  const sorted = [...countries].sort((a, b) => {
+    const aFav = favSet.has(a.name) ? 0 : 1;
+    const bFav = favSet.has(b.name) ? 0 : 1;
+    if (aFav !== bFav) return aFav - bFav;
+    return b.stories.length - a.stories.length;
+  });
 
   return (
     <div className="h-full flex flex-col bg-surface border-l border-border">
@@ -67,6 +74,7 @@ export default function Sidebar({ countries, selectedCountry, onSelectCountry }:
                       style={{ backgroundColor: hasConflict ? "#ff3d71" : "#00e5ff" }}
                     />
                     <span className="flex-1 text-sm font-heading text-text-main">
+                      {favSet.has(country.name) && <span className="text-accent mr-1">★</span>}
                       {country.name}
                     </span>
                     <span className="text-xs font-mono text-text-dim bg-surface-2 px-2 py-0.5 rounded">

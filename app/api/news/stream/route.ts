@@ -1,0 +1,124 @@
+import { fetchAllFeeds } from "@/lib/rss";
+import { summarizeNews } from "@/lib/gemini";
+import { getCachedData, getCachedDataStale, setCachedData } from "@/lib/cache";
+import { NewsData } from "@/types/news";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+function sseMessage(event: string, data: unknown): string {
+  return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+}
+
+export async function GET() {
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (event: string, data: unknown) => {
+        controller.enqueue(encoder.encode(sseMessage(event, data)));
+      };
+
+      try {
+        // Check cache first
+        const cached = getCachedData();
+        if (cached) {
+          send("status", { step: "cache-hit", message: "Using cached data" });
+          send("done", cached);
+          controller.close();
+          return;
+        }
+
+        send("status", { step: "rss", message: "Fetching RSS feeds..." });
+        const headlines = await fetchAllFeeds();
+        send("status", { step: "rss-done", message: `Got ${headlines.length} headlines` });
+
+        if (headlines.length === 0) {
+          const stale = getCachedDataStale();
+          send("done", stale ?? { countries: [], updated_at: new Date().toISOString() });
+          controller.close();
+          return;
+        }
+
+        const capped = headlines.slice(0, 30);
+        const formatHeadlines = (items: typeof capped) =>
+          items.map((h, i) => `${i + 1}. [${h.source}] ${h.title}\n   ${h.description}`).join("\n\n");
+
+        // Build link map
+        const linkMap = new Map<string, string>();
+        for (const h of headlines) {
+          if (h.link) linkMap.set(h.title.toLowerCase().trim(), h.link);
+        }
+
+        send("status", { step: "ai", message: "Analyzing with Gemini AI..." });
+
+        let rawResponse: string;
+        try {
+          rawResponse = await summarizeNews(formatHeadlines(capped));
+        } catch {
+          send("status", { step: "retry", message: "Retrying with fewer headlines..." });
+          const smaller = headlines.slice(0, 15);
+          rawResponse = await summarizeNews(formatHeadlines(smaller));
+        }
+
+        send("status", { step: "parsing", message: "Processing results..." });
+
+        let jsonStr = rawResponse.trim();
+        const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (fenceMatch) jsonStr = fenceMatch[1];
+
+        const data: NewsData = JSON.parse(jsonStr);
+
+        // Inject links
+        for (const country of data.countries) {
+          for (const story of country.stories) {
+            const key = story.headline.toLowerCase().trim();
+            if (linkMap.has(key)) {
+              story.link = linkMap.get(key);
+            } else {
+              const entries = Array.from(linkMap.entries());
+              for (const [title, link] of entries) {
+                if (key.includes(title.substring(0, 30)) || title.includes(key.substring(0, 30))) {
+                  story.link = link;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        if (!data.updated_at) data.updated_at = new Date().toISOString();
+        setCachedData(data);
+
+        send("done", data);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        const isQuota = msg.includes("429") || msg.includes("quota");
+
+        const stale = getCachedDataStale();
+        if (stale) {
+          send("done", {
+            ...stale,
+            error: isQuota ? "API quota exhausted. Showing cached data." : msg,
+          });
+        } else {
+          send("error", {
+            error: isQuota
+              ? "API quota exhausted. Free tier limit reached."
+              : msg,
+          });
+        }
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}

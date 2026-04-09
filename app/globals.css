@@ -99,3 +99,17 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Breaking news ticker */
+.ticker-scroll {
+  animation: tickerScroll 30s linear infinite;
+}
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

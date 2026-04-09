@@ -3,7 +3,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const PROMPT = `You are a news aggregator AI. I'm giving you headlines and snippets from 4 news sources from the last 24 hours.
 
 Organize these news stories by COUNTRY (the country the story is about, not where the source is from). For each country, provide:
-- A list of stories with: headline, 1-2 sentence summary, source name, category (one of: politics, conflict, economy, sports, tech, health, other)
+- A list of stories with: headline, 1-2 sentence summary, source name, category (one of: politics, conflict, economy, sports, tech, health, other), breaking (boolean - true only for major developing stories), sentiment (one of: positive, negative, neutral)
+- overall_sentiment for the country (one of: positive, negative, neutral) based on the dominant tone
+- sentiment_score from -1.0 (very negative) to 1.0 (very positive)
 
 Return ONLY valid JSON in this exact format, no markdown, no backticks:
 {
@@ -11,12 +13,16 @@ Return ONLY valid JSON in this exact format, no markdown, no backticks:
     {
       "name": "Pakistan",
       "code": "PAK",
+      "overall_sentiment": "negative",
+      "sentiment_score": -0.5,
       "stories": [
         {
           "headline": "...",
           "summary": "...",
           "source": "ARY News",
-          "category": "politics"
+          "category": "politics",
+          "breaking": false,
+          "sentiment": "neutral"
         }
       ]
     }

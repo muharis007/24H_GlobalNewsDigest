@@ -7,9 +7,12 @@ interface HeaderProps {
   loading: boolean;
   hasNews: boolean;
   onZap: () => void;
+  onTimeline: () => void;
+  onTrends: () => void;
+  onPrefs: () => void;
 }
 
-export default function Header({ updatedAt, storyCount, countryCount, loading, hasNews, onZap }: HeaderProps) {
+export default function Header({ updatedAt, storyCount, countryCount, loading, hasNews, onZap, onTimeline, onTrends, onPrefs }: HeaderProps) {
   const formattedTime = updatedAt
     ? new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null;
@@ -47,6 +50,24 @@ export default function Header({ updatedAt, storyCount, countryCount, loading, h
             </span>
           </>
         )}
+        <button
+          onClick={onPrefs}
+          className="border border-border text-text-dim font-heading font-bold text-xs px-3 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider"
+        >
+          ⚙️
+        </button>
+        <button
+          onClick={onTrends}
+          className="border border-border text-text-dim font-heading font-bold text-xs px-3 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider"
+        >
+          📊 Trends
+        </button>
+        <button
+          onClick={onTimeline}
+          className="border border-border text-text-dim font-heading font-bold text-xs px-3 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider"
+        >
+          📅 Timeline
+        </button>
         <button
           onClick={onZap}
           disabled={!hasNews}
