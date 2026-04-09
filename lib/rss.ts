@@ -22,24 +22,47 @@ export interface RawHeadline {
   link: string;
 }
 
-export async function fetchAllFeeds(): Promise<RawHeadline[]> {
+function isWithin24Hours(item: { pubDate?: string; isoDate?: string }): boolean {
+  if (!item.pubDate && !item.isoDate) return true;
+  const date = new Date(item.isoDate || item.pubDate || "");
+  if (isNaN(date.getTime())) return true;
   const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+  return date.getTime() > twentyFourHoursAgo;
+}
+
+async function fetchFeedWithTimeout(url: string, timeoutMs = 10000): Promise<Parser.Output<Record<string, unknown>>> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { "User-Agent": "NewsGlobe/1.0" },
+    });
+    const text = await response.text();
+    return await parser.parseString(text);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function fetchAllFeeds(): Promise<RawHeadline[]> {
   const results = await Promise.allSettled(
     RSS_SOURCES.map(async (src) => {
-      const feed = await parser.parseURL(src.url);
-      return (feed.items || [])
-        .filter((item) => {
-          if (!item.pubDate) return true;
-          const d = new Date(item.pubDate).getTime();
-          return d > twentyFourHoursAgo;
-        })
-        .map((item) => ({
-          title: item.title || "",
-          description: (item.contentSnippet || item.content || "").slice(0, 200),
-          pubDate: item.pubDate || new Date().toISOString(),
-          source: src.name,
-          link: item.link || "",
-        }));
+      try {
+        const feed = await fetchFeedWithTimeout(src.url);
+        return (feed.items || [])
+          .filter((item) => isWithin24Hours(item))
+          .map((item) => ({
+            title: item.title || "",
+            description: (item.contentSnippet || item.content || "").slice(0, 200),
+            pubDate: item.isoDate || item.pubDate || new Date().toISOString(),
+            source: src.name,
+            link: item.link || "",
+          }));
+      } catch (err) {
+        console.error(`[RSS] Failed to fetch ${src.name} (${src.url}):`, err instanceof Error ? err.message : err);
+        return [];
+      }
     })
   );
 

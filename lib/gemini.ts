@@ -7,6 +7,17 @@ Organize these news stories by COUNTRY (the country the story is about, not wher
 - overall_sentiment for the country (one of: positive, negative, neutral) based on the dominant tone
 - sentiment_score from -1.0 (very negative) to 1.0 (very positive)
 
+IMPORTANT: If multiple sources cover the same story or event, merge them into a SINGLE entry.
+List all sources that covered it in the "source" field separated by commas, e.g. "ARY News, Geo TV".
+Do NOT list the same event as separate stories from different sources.
+For example, if both ARY News and Geo TV report on "PM addresses parliament", combine into one story with source "ARY News, Geo TV".
+
+Context about sources:
+- arynews.tv and geo.tv are Pakistani news channels. Most of their stories are about Pakistan unless explicitly about another country.
+- arabnews.com is Saudi-based. Stories without a specific country mentioned are likely about Saudi Arabia.
+- bbc.co.uk covers global news. Classify based on the story content.
+When in doubt about which country a story belongs to, use the source's home country.
+
 Return ONLY valid JSON in this exact format, no markdown, no backticks:
 {
   "countries": [

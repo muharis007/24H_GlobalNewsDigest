@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect fill="#0a0e17" width="1200" height="630"/>
+  <rect fill="#111827" x="0" y="0" width="1200" height="630" rx="0"/>
+  <!-- Grid lines -->
+  <line x1="0" y1="315" x2="1200" y2="315" stroke="#1e293b" stroke-width="1"/>
+  <line x1="600" y1="0" x2="600" y2="630" stroke="#1e293b" stroke-width="1"/>
+  <line x1="0" y1="157" x2="1200" y2="157" stroke="#1e293b" stroke-width="0.5" opacity="0.5"/>
+  <line x1="0" y1="472" x2="1200" y2="472" stroke="#1e293b" stroke-width="0.5" opacity="0.5"/>
+  <line x1="300" y1="0" x2="300" y2="630" stroke="#1e293b" stroke-width="0.5" opacity="0.5"/>
+  <line x1="900" y1="0" x2="900" y2="630" stroke="#1e293b" stroke-width="0.5" opacity="0.5"/>
+  <!-- Dots representing news -->
+  <circle cx="380" cy="220" r="12" fill="#00e5ff" opacity="0.7"/>
+  <circle cx="380" cy="220" r="18" fill="#00e5ff" opacity="0.2"/>
+  <circle cx="650" cy="280" r="8" fill="#ff3d71" opacity="0.7"/>
+  <circle cx="650" cy="280" r="14" fill="#ff3d71" opacity="0.2"/>
+  <circle cx="820" cy="250" r="10" fill="#00e5ff" opacity="0.7"/>
+  <circle cx="820" cy="250" r="16" fill="#00e5ff" opacity="0.2"/>
+  <circle cx="500" cy="340" r="6" fill="#fbbf24" opacity="0.7"/>
+  <circle cx="280" cy="380" r="9" fill="#00e5ff" opacity="0.7"/>
+  <circle cx="920" cy="320" r="7" fill="#34d399" opacity="0.7"/>
+  <!-- Title -->
+  <text x="600" y="200" text-anchor="middle" fill="#e2e8f0" font-family="sans-serif" font-weight="bold" font-size="64">NEWSGLOBE</text>
+  <text x="600" y="260" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="24">24H Global News Intelligence</text>
+  <!-- Subtitle -->
+  <text x="600" y="420" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="18">AI-powered dashboard scanning 4 sources worldwide</text>
+  <!-- Author -->
+  <text x="600" y="560" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="14">Built by Muhammad Haris</text>
+</svg>

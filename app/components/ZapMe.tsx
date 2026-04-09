@@ -209,6 +209,9 @@ export default function ZapMe({ news, onClose }: ZapMeProps) {
             <p className="text-text-dim text-xs font-mono mt-1">
               Catch up on {totalStories} stories in ~{readingMinutes} min
             </p>
+            <p className="text-[10px] font-mono text-text-dim/60 mt-0.5">
+              AI-generated summaries. Verify with original sources.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {/* Speed controls */}

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import LoadingOverlay from "./components/LoadingOverlay";
+import ErrorBanner from "./components/ErrorBanner";
 
 import ZapMe from "./components/ZapMe";
 import SearchFilter, { FilterState } from "./components/SearchFilter";
@@ -41,6 +42,7 @@ export default function Home() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fetchStartedAt, setFetchStartedAt] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showZap, setShowZap] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
@@ -60,54 +62,82 @@ export default function Home() {
   const fetchNews = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setLiveStatus("Connecting...");
+    setLiveStatus("Fetching RSS feeds...");
+    setFetchStartedAt(Date.now());
 
     try {
-      const res = await fetch("/api/news/stream");
-      if (!res.body) throw new Error("No response body");
+      // Phase 1: Fetch RSS items (fast)
+      const rssRes = await fetch("/api/rss");
+      const rssData = await rssRes.json();
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
+      if (rssData.error || !rssData.items || rssData.items.length === 0) {
+        // Try cached data
+        const cached = await fetch("/api/news/cached");
+        if (cached.ok) {
+          const cachedData = await cached.json();
+          if (cachedData.countries?.length > 0) {
+            setData(cachedData);
+            try { localStorage.setItem("newsglobe-data", JSON.stringify(cachedData)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
+            setError("Could not reach news sources. Showing cached data.");
+          } else {
+            setError("Could not reach news sources. Check your connection.");
+          }
+        } else {
+          setError("Could not reach news sources. Check your connection.");
+        }
+        return;
+      }
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+      setLiveStatus(`Got ${rssData.count} headlines. Summarizing with AI...`);
 
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
+      // Phase 2: Summarize with Gemini (slower)
+      const summaryRes = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ headlines: rssData.items }),
+      });
+      const newsResult = await summaryRes.json();
 
-        let currentEvent = "";
-        for (const line of lines) {
-          if (line.startsWith("event: ")) {
-            currentEvent = line.slice(7);
-          } else if (line.startsWith("data: ")) {
-            const dataStr = line.slice(6);
-            try {
-              const payload = JSON.parse(dataStr);
-              if (currentEvent === "status") {
-                setLiveStatus(payload.message);
-              } else if (currentEvent === "done") {
-                if (payload.error) {
-                  setError(payload.error);
-                }
-                if (payload.countries?.length > 0) {
-                  setData(payload);
-                  try { localStorage.setItem("newsglobe-data", JSON.stringify(payload)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
-                }
-              } else if (currentEvent === "error") {
-                setError(payload.error);
-              }
-            } catch {}
+      if (newsResult.error && !newsResult.countries?.length) {
+        // Complete failure — try cached
+        const cached = await fetch("/api/news/cached");
+        if (cached.ok) {
+          const cachedData = await cached.json();
+          if (cachedData.countries?.length > 0) {
+            setData(cachedData);
+            try { localStorage.setItem("newsglobe-data", JSON.stringify(cachedData)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
           }
         }
+        setError(newsResult.error);
+        return;
+      }
+
+      if (newsResult.error) {
+        setError(newsResult.error);
+      }
+
+      if (newsResult.countries?.length > 0) {
+        setData(newsResult);
+        try { localStorage.setItem("newsglobe-data", JSON.stringify(newsResult)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      // Try to load from cache on any error
+      try {
+        const cached = await fetch("/api/news/cached");
+        if (cached.ok) {
+          const cachedData = await cached.json();
+          if (cachedData.countries?.length > 0) {
+            setData(cachedData);
+            try { localStorage.setItem("newsglobe-data", JSON.stringify(cachedData)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
+          }
+        }
+      } catch {}
+      setError(msg);
     } finally {
       setLoading(false);
       setLiveStatus(null);
+      setFetchStartedAt(null);
     }
   }, []);
 
@@ -167,6 +197,16 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Error Banner */}
+      {error && !loading && (
+        <ErrorBanner
+          type={error.includes("cached") || error.includes("quota") ? "warning" : "error"}
+          message={error}
+          dismissible
+          onDismiss={() => setError(null)}
+        />
+      )}
+
       {/* Breaking News Ticker */}
       {data && <NewsTicker countries={data.countries} />}
 
@@ -193,7 +233,7 @@ export default function Home() {
                 <button
                   key={mode}
                   onClick={() => setMapMode(mode)}
-                  className={`text-[10px] font-mono px-2.5 py-1 rounded transition-colors ${
+                  className={`text-[10px] md:text-[10px] font-mono px-3 py-2 md:px-2.5 md:py-1 rounded transition-colors min-h-[36px] md:min-h-0 ${
                     mapMode === mode
                       ? "bg-accent text-bg font-bold"
                       : "bg-surface/90 text-text-dim hover:text-text-main border border-border"
@@ -208,18 +248,13 @@ export default function Home() {
           {/* Sentiment legend */}
           {mapMode === "sentiment" && data && <SentimentLegend />}
 
-          {loading && <LoadingOverlay status={liveStatus} />}
-          {error && !loading && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-accent-2/20 border border-accent-2 text-accent-2 rounded-lg px-4 py-2 text-sm font-mono shadow-lg backdrop-blur-sm">
-              {error}
-            </div>
-          )}
+          {loading && <LoadingOverlay status={liveStatus} startedAt={fetchStartedAt ?? undefined} />}
 
           {/* Mobile sidebar toggle */}
           {data && (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden absolute bottom-4 right-4 z-40 bg-accent text-bg font-heading font-bold text-xs px-4 py-2 rounded-full shadow-lg"
+              className="lg:hidden absolute bottom-4 right-4 z-40 bg-accent text-bg font-heading font-bold text-xs px-5 py-3 rounded-full shadow-lg min-h-[44px]"
             >
               {sidebarOpen ? "Hide" : `${countryCount} Countries`}
             </button>
@@ -233,13 +268,19 @@ export default function Home() {
             ${sidebarOpen ? "translate-y-0" : "translate-y-full"}
             lg:translate-y-0
             fixed lg:static bottom-0 left-0 right-0 lg:bottom-auto
-            h-[60vh] lg:h-auto
+            h-[70vh] lg:h-auto
             w-full lg:w-[340px]
             z-50 lg:z-auto
             transition-transform duration-300 ease-in-out
             shrink-0
+            rounded-t-2xl lg:rounded-none
           `}
         >
+          {/* Mobile grab handle */}
+          <div className="lg:hidden flex flex-col items-center pt-2 pb-1 bg-surface rounded-t-2xl border-t border-x border-border">
+            <div className="grab-handle" />
+            <span className="text-[10px] font-mono text-text-dim mt-1">Swipe or tap to dismiss</span>
+          </div>
           <Sidebar
             countries={filteredCountries}
             selectedCountry={selectedCountry}
@@ -255,16 +296,34 @@ export default function Home() {
       </div>
 
       {/* Zap Me overlay */}
-      {showZap && data && (
-        <ZapMe news={data} onClose={() => setShowZap(false)} />
+      {showZap && (
+        data ? (
+          <ZapMe news={data} onClose={() => setShowZap(false)} />
+        ) : (
+          <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-text-dim font-mono text-sm mb-4">No news data available. Fetch news first.</p>
+              <button onClick={() => setShowZap(false)} className="text-accent font-mono text-sm hover:text-accent/80">Close</button>
+            </div>
+          </div>
+        )
       )}
       {/* Timeline overlay */}
       {showTimeline && (
         <Timeline onClose={() => setShowTimeline(false)} />
       )}
       {/* Trends overlay */}
-      {showTrends && data && (
-        <TrendPanel countries={data.countries} onClose={() => setShowTrends(false)} />
+      {showTrends && (
+        data ? (
+          <TrendPanel countries={data.countries} onClose={() => setShowTrends(false)} />
+        ) : (
+          <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-text-dim font-mono text-sm mb-4">No news data available. Fetch news first.</p>
+              <button onClick={() => setShowTrends(false)} className="text-accent font-mono text-sm hover:text-accent/80">Close</button>
+            </div>
+          </div>
+        )
       )}
       {/* Preferences overlay */}
       {showPrefs && (
@@ -275,14 +334,23 @@ export default function Home() {
         />
       )}
       {/* Chat overlay */}
-      {showChat && data && (
-        <NewsChat news={data} onClose={() => setShowChat(false)} />
+      {showChat && (
+        data ? (
+          <NewsChat news={data} onClose={() => setShowChat(false)} />
+        ) : (
+          <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-text-dim font-mono text-sm mb-4">No news data available. Fetch news first.</p>
+              <button onClick={() => setShowChat(false)} className="text-accent font-mono text-sm hover:text-accent/80">Close</button>
+            </div>
+          </div>
+        )
       )}
       {/* Floating chat button */}
       {data && data.countries.length > 0 && !showChat && (
         <button
           onClick={() => setShowChat(true)}
-          className="fixed bottom-6 right-6 z-[9000] w-12 h-12 bg-accent text-bg rounded-full shadow-lg flex items-center justify-center text-xl hover:bg-accent/80 transition-colors"
+          className="fixed bottom-6 right-6 z-[9000] w-12 h-12 md:w-12 md:h-12 bg-accent text-bg rounded-full shadow-lg flex items-center justify-center text-sm md:text-xl hover:bg-accent/80 transition-colors"
           title="Ask the News"
         >
           Chat

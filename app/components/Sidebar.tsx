@@ -24,6 +24,10 @@ export default function Sidebar({ countries, selectedCountry, onSelectCountry, f
 
   return (
     <div className="h-full flex flex-col bg-surface border-l border-border">
+      {/* AI Disclaimer */}
+      <div className="px-3 py-1.5 bg-surface-2/50 border-b border-border shrink-0">
+        <p className="text-[10px] font-mono text-text-dim text-center">AI-generated content. Verify with original sources.</p>
+      </div>
       {selected ? (
         <>
           {/* Country detail header */}

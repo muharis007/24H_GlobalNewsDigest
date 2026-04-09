@@ -67,8 +67,8 @@ export default function NewsChat({ news, onClose }: NewsChatProps) {
   }, [input, loading]);
 
   return (
-    <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg h-[70vh] bg-surface border border-border rounded-xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center p-0 md:p-4">
+      <div className="w-full h-full md:max-w-lg md:h-[70vh] bg-surface border-0 md:border border-border md:rounded-xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
           <h2 className="font-heading font-bold text-text-main text-lg">Ask the News</h2>
@@ -81,6 +81,7 @@ export default function NewsChat({ news, onClose }: NewsChatProps) {
             <div className="text-center text-text-dim text-xs font-mono py-8">
               Ask anything about today&apos;s news.<br />
               e.g. &quot;What&apos;s happening in Pakistan?&quot; or &quot;Summarize the conflicts.&quot;
+              <p className="mt-3 text-[10px] text-text-dim/60">Answers are AI-generated and may contain inaccuracies.</p>
             </div>
           )}
           {messages.map((msg, i) => (

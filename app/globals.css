@@ -113,3 +113,34 @@ body {
     transform: translateX(-50%);
   }
 }
+
+/* Prevent horizontal scroll on all devices */
+html,
+body {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile touch targets (min 44px) */
+@media (max-width: 767px) {
+  .leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 18px !important;
+  }
+
+  .dark-tooltip {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+}
+
+/* Grab handle */
+.grab-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: #334155;
+  margin: 0 auto;
+}

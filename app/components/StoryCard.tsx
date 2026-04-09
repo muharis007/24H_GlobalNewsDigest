@@ -89,7 +89,7 @@ export default function StoryCard({ story }: StoryCardProps) {
       <div className="mt-2 flex items-center gap-2 flex-wrap">
         <button
           onClick={async () => {
-            const text = `${story.headline}\n${story.summary}${story.link ? `\n${story.link}` : ""}`;
+            const text = `${story.headline}\n${story.summary}${story.link ? `\n${story.link}` : ""}\n\n(AI-generated summary via NewsGlobe)`;
             if (navigator.share) {
               try { await navigator.share({ title: story.headline, text }); } catch {}
             } else {
@@ -109,7 +109,7 @@ export default function StoryCard({ story }: StoryCardProps) {
               speechSynthesis.cancel();
               setSpeaking(false);
             } else {
-              const utter = new SpeechSynthesisUtterance(`${story.headline}. ${story.summary}`);
+              const utter = new SpeechSynthesisUtterance(`${story.headline}. ${story.summary}. Note: this is an AI-generated summary.`);
               utter.rate = 0.9;
               utter.onend = () => setSpeaking(false);
               utter.onerror = () => setSpeaking(false);

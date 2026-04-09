@@ -52,8 +52,8 @@ export default function TrendPanel({ countries, onClose }: TrendPanelProps) {
     .slice(0, 12);
 
   return (
-    <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center p-8">
-      <div className="w-full max-w-xl bg-surface border border-border rounded-xl overflow-hidden">
+    <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center p-4 md:p-8">
+      <div className="w-full max-w-xl bg-surface border border-border rounded-xl overflow-hidden max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="font-heading font-bold text-text-main text-lg">Trends</h2>
           <button onClick={onClose} className="text-text-dim hover:text-accent-2 text-sm font-mono">✕ Close</button>

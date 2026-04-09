@@ -25,7 +25,7 @@ export default function Timeline({ onClose }: TimelineProps) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9998] bg-bg/95 flex flex-col items-center justify-center p-8">
+    <div className="fixed inset-0 z-[9998] bg-bg/95 flex flex-col items-center justify-start md:justify-center p-4 md:p-8 overflow-y-auto">
       <div className="w-full max-w-2xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-heading font-bold text-text-main text-xl">News Timeline</h2>

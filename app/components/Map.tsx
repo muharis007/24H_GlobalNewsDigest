@@ -26,10 +26,11 @@ export default function Map({ countries, selectedCountry, onSelectCountry, heatm
     const northEast = L.latLng(85, 180);
     const bounds = L.latLngBounds(southWest, northEast);
 
+    const isMobile = window.innerWidth < 768;
     mapRef.current = L.map(containerRef.current, {
-      center: [30, 40],
-      zoom: 3,
-      minZoom: 3,
+      center: isMobile ? [20, 30] : [30, 40],
+      zoom: isMobile ? 2 : 3,
+      minZoom: 2,
       maxZoom: 8,
       zoomControl: false,
       attributionControl: false,
