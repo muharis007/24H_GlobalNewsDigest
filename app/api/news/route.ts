@@ -1,0 +1,91 @@
+import { NextResponse } from "next/server";
+import { fetchAllFeeds } from "@/lib/rss";
+import { summarizeNews } from "@/lib/gemini";
+import { getCachedData, getCachedDataStale, setCachedData } from "@/lib/cache";
+import { NewsData } from "@/types/news";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const forceRefresh = searchParams.get("refresh") === "true";
+
+  // Check cache first
+  if (!forceRefresh) {
+    const cached = getCachedData();
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+  }
+
+  try {
+    // Fetch all RSS feeds
+    console.log("[NewsGlobe] Fetching RSS feeds...");
+    const headlines = await fetchAllFeeds();
+    console.log(`[NewsGlobe] Got ${headlines.length} headlines`);
+
+    if (headlines.length === 0) {
+      const stale = getCachedDataStale();
+      if (stale) {
+        return NextResponse.json(stale);
+      }
+      return NextResponse.json(
+        { countries: [], updated_at: new Date().toISOString() } as NewsData
+      );
+    }
+
+    // Format headlines for Gemini (cap at 30 to stay within rate limits)
+    const capped = headlines.slice(0, 30);
+    const formatHeadlines = (items: typeof capped) =>
+      items.map((h, i) => `${i + 1}. [${h.source}] ${h.title}\n   ${h.description}`).join("\n\n");
+
+    let rawResponse: string;
+    try {
+      console.log(`[NewsGlobe] Sending ${capped.length} headlines to Gemini...`);
+      rawResponse = await summarizeNews(formatHeadlines(capped));
+    } catch {
+      // If full batch fails, try with fewer headlines
+      console.log("[NewsGlobe] Full batch failed, trying with 15 headlines...");
+      const smaller = headlines.slice(0, 15);
+      rawResponse = await summarizeNews(formatHeadlines(smaller));
+    }
+    console.log("[NewsGlobe] Gemini response length:", rawResponse.length);
+
+    // Parse JSON from response - strip markdown fences if present
+    let jsonStr = rawResponse.trim();
+    // Remove markdown code fences
+    const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (fenceMatch) {
+      jsonStr = fenceMatch[1];
+    }
+
+    const data: NewsData = JSON.parse(jsonStr);
+
+    // Ensure updated_at is set
+    if (!data.updated_at) {
+      data.updated_at = new Date().toISOString();
+    }
+
+    // Cache the result
+    setCachedData(data);
+
+    return NextResponse.json(data);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : "";
+    console.error("[NewsGlobe] Error:", msg);
+    console.error("[NewsGlobe] Stack:", stack);
+
+    // Try to return stale cache on error
+    const stale = getCachedDataStale();
+    if (stale) {
+      return NextResponse.json(stale);
+    }
+
+    return NextResponse.json(
+      { error: msg, countries: [], updated_at: new Date().toISOString() },
+      { status: 500 }
+    );
+  }
+}
