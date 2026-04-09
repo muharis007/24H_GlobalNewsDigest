@@ -79,7 +79,8 @@ export async function GET(request: Request) {
           story.link = linkMap.get(key);
         } else {
           // Find best partial match
-          for (const [title, link] of linkMap.entries()) {
+          const entries = Array.from(linkMap.entries());
+          for (const [title, link] of entries) {
             if (key.includes(title.substring(0, 30)) || title.includes(key.substring(0, 30))) {
               story.link = link;
               break;
@@ -100,19 +101,28 @@ export async function GET(request: Request) {
     return NextResponse.json(data);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    const stack = error instanceof Error ? error.stack : "";
     console.error("[NewsGlobe] Error:", msg);
-    console.error("[NewsGlobe] Stack:", stack);
+
+    const isQuotaError = msg.includes("429") || msg.includes("quota");
 
     // Try to return stale cache on error
     const stale = getCachedDataStale();
     if (stale) {
-      return NextResponse.json(stale);
+      return NextResponse.json({
+        ...stale,
+        error: isQuotaError ? "API quota exhausted. Showing cached data." : undefined,
+      });
     }
 
     return NextResponse.json(
-      { error: msg, countries: [], updated_at: new Date().toISOString() },
-      { status: 500 }
+      {
+        error: isQuotaError
+          ? "API quota exhausted. Free tier limit reached — news will refresh automatically when the quota resets."
+          : msg,
+        countries: [],
+        updated_at: new Date().toISOString(),
+      },
+      { status: isQuotaError ? 429 : 500 }
     );
   }
 }

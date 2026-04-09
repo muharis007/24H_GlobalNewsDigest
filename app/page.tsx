@@ -24,8 +24,17 @@ export default function Home() {
     setError(null);
     try {
       const res = await fetch(`/api/news${refresh ? "?refresh=true" : ""}`);
-      if (!res.ok) throw new Error("Failed to fetch news");
-      const json: NewsData = await res.json();
+      const json = await res.json();
+      if (json.error) {
+        if (json.error.includes("429") || json.error.includes("quota")) {
+          setError("API quota exhausted. News will refresh automatically when the quota resets.");
+        } else {
+          setError(json.error);
+        }
+        // Still use the data if countries were returned (stale cache)
+        if (json.countries?.length > 0) setData(json);
+        return;
+      }
       setData(json);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -62,7 +71,6 @@ export default function Home() {
         countryCount={countryCount}
         loading={loading}
         hasNews={!!data && data.countries.length > 0}
-        onFetch={() => fetchNews(true)}
         onZap={() => setShowZap(true)}
       />
 

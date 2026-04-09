@@ -11,7 +11,7 @@ export default function EmptyState() {
           Global News Intelligence
         </h2>
         <p className="text-text-dim text-sm mb-6 font-mono">
-          Click <span className="text-accent">FETCH NEWS</span> to scan the latest headlines and map them globally.
+          Scanning the latest headlines and mapping them globally...
         </p>
         <div className="flex flex-wrap justify-center gap-2">
           {SOURCES.map((s) => (

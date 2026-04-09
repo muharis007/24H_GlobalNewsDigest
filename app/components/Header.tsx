@@ -6,11 +6,10 @@ interface HeaderProps {
   countryCount: number;
   loading: boolean;
   hasNews: boolean;
-  onFetch: () => void;
   onZap: () => void;
 }
 
-export default function Header({ updatedAt, storyCount, countryCount, loading, hasNews, onFetch, onZap }: HeaderProps) {
+export default function Header({ updatedAt, storyCount, countryCount, loading, hasNews, onZap }: HeaderProps) {
   const formattedTime = updatedAt
     ? new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null;
@@ -55,13 +54,9 @@ export default function Header({ updatedAt, storyCount, countryCount, loading, h
         >
           ⚡ Zap Me
         </button>
-        <button
-          onClick={onFetch}
-          disabled={loading}
-          className="bg-accent text-bg font-heading font-bold text-xs px-4 py-1.5 rounded hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
-        >
-          {loading ? "Scanning..." : "Fetch News"}
-        </button>
+        {loading && (
+          <span className="text-[10px] font-mono text-accent animate-pulse">Scanning...</span>
+        )}
       </div>
     </header>
   );

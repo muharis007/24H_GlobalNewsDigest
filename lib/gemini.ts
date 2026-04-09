@@ -35,26 +35,29 @@ export async function summarizeNews(headlines: string): Promise<string> {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
 
-  // Retry up to 3 times with exponential backoff
+  // Retry up to 3 times with exponential backoff, falling back to alternate models
   let lastError: Error | null = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      if (attempt > 0) {
-        const delay = Math.pow(2, attempt) * 1000;
-        console.log(`[Gemini] Retry ${attempt}, waiting ${delay}ms...`);
-        await new Promise((r) => setTimeout(r, delay));
-      }
-      const result = await model.generateContent(PROMPT + headlines);
-      const text = result.response.text();
-      return text;
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err));
-      console.error(`[Gemini] Attempt ${attempt + 1} failed:`, lastError.message);
-      // Only retry on 503/429 errors
-      if (!lastError.message.includes("503") && !lastError.message.includes("429") && !lastError.message.includes("high demand")) {
-        throw lastError;
+  for (const modelName of models) {
+    const model = genAI.getGenerativeModel({ model: modelName });
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delay = Math.pow(2, attempt) * 1000;
+          console.log(`[Gemini] Retry ${attempt} on ${modelName}, waiting ${delay}ms...`);
+          await new Promise((r) => setTimeout(r, delay));
+        }
+        console.log(`[Gemini] Trying model: ${modelName}, attempt ${attempt + 1}`);
+        const result = await model.generateContent(PROMPT + headlines);
+        const text = result.response.text();
+        return text;
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.error(`[Gemini] ${modelName} attempt ${attempt + 1} failed:`, lastError.message);
+        if (!lastError.message.includes("503") && !lastError.message.includes("429") && !lastError.message.includes("high demand")) {
+          break; // Don't retry non-transient errors on this model, try next model
+        }
       }
     }
   }
