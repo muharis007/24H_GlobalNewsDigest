@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import LoadingOverlay from "./components/LoadingOverlay";
-import EmptyState from "./components/EmptyState";
+
 import ZapMe from "./components/ZapMe";
 import SearchFilter, { FilterState } from "./components/SearchFilter";
 import NewsTicker from "./components/NewsTicker";
@@ -190,9 +190,8 @@ export default function Home() {
           {mapMode === "sentiment" && data && <SentimentLegend />}
 
           {loading && <LoadingOverlay status={liveStatus} />}
-          {!data && !loading && <EmptyState />}
           {error && !loading && (
-            <div className="absolute bottom-4 left-4 z-40 bg-accent-2/20 border border-accent-2 text-accent-2 rounded-lg px-4 py-2 text-sm font-mono">
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-accent-2/20 border border-accent-2 text-accent-2 rounded-lg px-4 py-2 text-sm font-mono shadow-lg backdrop-blur-sm">
               {error}
             </div>
           )}

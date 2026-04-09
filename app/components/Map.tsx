@@ -22,15 +22,26 @@ export default function Map({ countries, selectedCountry, onSelectCountry, heatm
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    const southWest = L.latLng(-60, -180);
+    const northEast = L.latLng(85, 180);
+    const bounds = L.latLngBounds(southWest, northEast);
+
     mapRef.current = L.map(containerRef.current, {
-      center: [30, 50],
+      center: [30, 40],
       zoom: 3,
+      minZoom: 3,
+      maxZoom: 8,
       zoomControl: false,
       attributionControl: false,
+      maxBounds: bounds,
+      maxBoundsViscosity: 1.0,
+      worldCopyJump: false,
     });
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 19,
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?language=en", {
+      maxZoom: 8,
+      noWrap: true,
+      bounds: bounds,
     }).addTo(mapRef.current);
 
     L.control.zoom({ position: "bottomright" }).addTo(mapRef.current);
@@ -112,6 +123,11 @@ export default function Map({ countries, selectedCountry, onSelectCountry, heatm
   }, [countries, selectedCountry, onSelectCountry, heatmapMode, sentimentMode]);
 
   return (
-    <div ref={containerRef} className="w-full h-full" />
+    <div
+      ref={containerRef}
+      className="w-full h-full"
+      onWheel={(e) => e.preventDefault()}
+      style={{ touchAction: "none" }}
+    />
   );
 }
