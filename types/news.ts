@@ -3,6 +3,7 @@ export interface Story {
   summary: string;
   source: string;
   category: "politics" | "conflict" | "economy" | "sports" | "tech" | "health" | "other";
+  link?: string;
 }
 
 export interface Country {

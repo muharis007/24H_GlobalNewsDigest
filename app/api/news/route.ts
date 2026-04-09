@@ -40,6 +40,14 @@ export async function GET(request: Request) {
     const formatHeadlines = (items: typeof capped) =>
       items.map((h, i) => `${i + 1}. [${h.source}] ${h.title}\n   ${h.description}`).join("\n\n");
 
+    // Build a title→link lookup for post-processing
+    const linkMap = new Map<string, string>();
+    for (const h of headlines) {
+      if (h.link) {
+        linkMap.set(h.title.toLowerCase().trim(), h.link);
+      }
+    }
+
     let rawResponse: string;
     try {
       console.log(`[NewsGlobe] Sending ${capped.length} headlines to Gemini...`);
@@ -61,6 +69,25 @@ export async function GET(request: Request) {
     }
 
     const data: NewsData = JSON.parse(jsonStr);
+
+    // Inject original article links by matching headlines
+    for (const country of data.countries) {
+      for (const story of country.stories) {
+        const key = story.headline.toLowerCase().trim();
+        // Try exact match first, then partial match
+        if (linkMap.has(key)) {
+          story.link = linkMap.get(key);
+        } else {
+          // Find best partial match
+          for (const [title, link] of linkMap.entries()) {
+            if (key.includes(title.substring(0, 30)) || title.includes(key.substring(0, 30))) {
+              story.link = link;
+              break;
+            }
+          }
+        }
+      }
+    }
 
     // Ensure updated_at is set
     if (!data.updated_at) {

@@ -14,6 +14,7 @@ interface ZapEntry {
   headline: string;
   summary: string;
   source: string;
+  link?: string;
 }
 
 interface ZapCategory {
@@ -25,7 +26,7 @@ interface ZapCategory {
 type ZapLine =
   | { type: "category"; category: string; icon: string; count: number }
   | { type: "country"; name: string; flag: string }
-  | { type: "story"; headline: string; summary: string; source: string };
+  | { type: "story"; headline: string; summary: string; source: string; link?: string };
 
 const FLAGS: Record<string, string> = {
   PAK: "🇵🇰", SAU: "🇸🇦", GBR: "🇬🇧", USA: "🇺🇸",
@@ -71,6 +72,7 @@ function buildLines(news: NewsData): ZapLine[] {
         headline: story.headline,
         summary: story.summary,
         source: story.source,
+        link: story.link,
       });
     }
   }
@@ -105,7 +107,7 @@ function buildLines(news: NewsData): ZapLine[] {
       const flag = FLAGS[code] || "🌍";
       lines.push({ type: "country", name: countryEntries[0].country, flag });
       for (const e of countryEntries) {
-        lines.push({ type: "story", headline: e.headline, summary: e.summary, source: e.source });
+        lines.push({ type: "story", headline: e.headline, summary: e.summary, source: e.source, link: e.link });
       }
     }
   }
@@ -128,7 +130,7 @@ export default function ZapMe({ news, onClose }: ZapMeProps) {
   const totalLines = lines.length;
   const totalStories = lines.filter((l) => l.type === "story").length;
 
-  const [visibleCount, setVisibleCount] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
   const [speed, setSpeed] = useState<number>(1);
   const [userScrolledUp, setUserScrolledUp] = useState(false);
@@ -188,7 +190,7 @@ export default function ZapMe({ news, onClose }: ZapMeProps) {
   const readingMinutes = Math.max(1, Math.round(totalStories * 0.1));
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: "rgba(10, 14, 23, 0.97)", backdropFilter: "blur(20px)" }}>
+    <div className="fixed inset-0 z-[9999] flex flex-col bg-bg" style={{ isolation: "isolate" }}>
       {/* Progress bar */}
       <div className="h-1 w-full bg-surface-2 shrink-0">
         <div
@@ -294,6 +296,17 @@ export default function ZapMe({ news, onClose }: ZapMeProps) {
                     {line.summary && (
                       <p className="text-[12px] font-mono text-text-dim/50 leading-relaxed pl-4 mt-0.5">
                         {line.summary}
+                        {line.link && (
+                          <a
+                            href={line.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-2 text-accent hover:text-accent/80 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Read more →
+                          </a>
+                        )}
                       </p>
                     )}
                   </div>

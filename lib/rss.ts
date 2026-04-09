@@ -19,6 +19,7 @@ export interface RawHeadline {
   description: string;
   pubDate: string;
   source: string;
+  link: string;
 }
 
 export async function fetchAllFeeds(): Promise<RawHeadline[]> {
@@ -37,6 +38,7 @@ export async function fetchAllFeeds(): Promise<RawHeadline[]> {
           description: (item.contentSnippet || item.content || "").slice(0, 200),
           pubDate: item.pubDate || new Date().toISOString(),
           source: src.name,
+          link: item.link || "",
         }));
     })
   );

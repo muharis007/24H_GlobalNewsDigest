@@ -34,6 +34,16 @@ export default function StoryCard({ story }: StoryCardProps) {
         {story.headline}
       </h4>
       <p className="text-xs text-text-dim leading-relaxed">{story.summary}</p>
+      {story.link && (
+        <a
+          href={story.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-2 text-[11px] font-mono text-accent hover:text-accent/80 transition-colors"
+        >
+          Read more →
+        </a>
+      )}
     </div>
   );
 }
