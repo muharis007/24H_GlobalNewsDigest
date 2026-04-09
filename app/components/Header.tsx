@@ -54,26 +54,26 @@ export default function Header({ updatedAt, storyCount, countryCount, loading, h
           onClick={onPrefs}
           className="border border-border text-text-dim font-heading font-bold text-xs px-3 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider"
         >
-          ⚙️
+          Settings
         </button>
         <button
           onClick={onTrends}
           className="border border-border text-text-dim font-heading font-bold text-xs px-3 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider"
         >
-          📊 Trends
+          Trends
         </button>
         <button
           onClick={onTimeline}
           className="border border-border text-text-dim font-heading font-bold text-xs px-3 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider"
         >
-          📅 Timeline
+          Timeline
         </button>
         <button
           onClick={onZap}
           disabled={!hasNews}
           className="border border-accent text-accent font-heading font-bold text-xs px-4 py-1.5 rounded hover:bg-accent hover:text-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-accent uppercase tracking-wider"
         >
-          ⚡ Zap Me
+          Zap Me
         </button>
         {loading && (
           <span className="text-[10px] font-mono text-accent animate-pulse">Scanning...</span>

@@ -79,7 +79,7 @@ export default function Preferences({ availableCountries, onClose, onSave }: Pre
     <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center p-8">
       <div className="w-full max-w-md bg-surface border border-border rounded-xl overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="font-heading font-bold text-text-main text-lg">⚙️ Preferences</h2>
+          <h2 className="font-heading font-bold text-text-main text-lg">Preferences</h2>
           <button onClick={onClose} className="text-text-dim hover:text-accent-2 text-sm font-mono">✕</button>
         </div>
 

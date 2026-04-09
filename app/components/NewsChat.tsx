@@ -71,7 +71,7 @@ export default function NewsChat({ news, onClose }: NewsChatProps) {
       <div className="w-full max-w-lg h-[70vh] bg-surface border border-border rounded-xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
-          <h2 className="font-heading font-bold text-text-main text-lg">💬 Ask the News</h2>
+          <h2 className="font-heading font-bold text-text-main text-lg">Ask the News</h2>
           <button onClick={onClose} className="text-text-dim hover:text-accent-2 text-sm font-mono">✕</button>
         </div>
 

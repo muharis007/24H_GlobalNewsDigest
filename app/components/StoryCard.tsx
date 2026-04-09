@@ -100,7 +100,7 @@ export default function StoryCard({ story }: StoryCardProps) {
           }}
           className="text-[10px] font-mono text-text-dim hover:text-accent transition-colors"
         >
-          {copied ? "✓ Copied" : "📤 Share"}
+          {copied ? "Copied" : "Share"}
         </button>
         <span className="text-border">|</span>
         <button
@@ -119,10 +119,10 @@ export default function StoryCard({ story }: StoryCardProps) {
           }}
           className="text-[10px] font-mono text-text-dim hover:text-accent transition-colors"
         >
-          {speaking ? "⏹ Stop" : "🔊 Listen"}
+          {speaking ? "Stop" : "Listen"}
         </button>
         <span className="text-border">|</span>
-        <span className="text-[10px] text-text-dim font-mono">🌐</span>
+        <span className="text-[10px] text-text-dim font-mono">Translate:</span>
         {LANGUAGES.map((lang) => (
           <button
             key={lang.code}

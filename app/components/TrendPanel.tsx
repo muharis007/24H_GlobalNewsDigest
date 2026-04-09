@@ -3,13 +3,13 @@
 import { Country, Category } from "@/types/news";
 
 const CATEGORY_CONFIG: Record<string, { color: string; icon: string }> = {
-  conflict: { color: "#ff3d71", icon: "🔴" },
-  politics: { color: "#fbbf24", icon: "🏛️" },
-  economy: { color: "#34d399", icon: "💰" },
-  sports: { color: "#60a5fa", icon: "⚽" },
-  tech: { color: "#a78bfa", icon: "💻" },
-  health: { color: "#f472b6", icon: "🏥" },
-  other: { color: "#94a3b8", icon: "📌" },
+  conflict: { color: "#ff3d71", icon: "" },
+  politics: { color: "#fbbf24", icon: "" },
+  economy: { color: "#34d399", icon: "" },
+  sports: { color: "#60a5fa", icon: "" },
+  tech: { color: "#a78bfa", icon: "" },
+  health: { color: "#f472b6", icon: "" },
+  other: { color: "#94a3b8", icon: "" },
 };
 
 interface TrendPanelProps {
@@ -55,7 +55,7 @@ export default function TrendPanel({ countries, onClose }: TrendPanelProps) {
     <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center p-8">
       <div className="w-full max-w-xl bg-surface border border-border rounded-xl overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="font-heading font-bold text-text-main text-lg">📊 Trends</h2>
+          <h2 className="font-heading font-bold text-text-main text-lg">Trends</h2>
           <button onClick={onClose} className="text-text-dim hover:text-accent-2 text-sm font-mono">✕ Close</button>
         </div>
 

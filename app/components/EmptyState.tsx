@@ -6,7 +6,7 @@ export default function EmptyState() {
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
       <div className="bg-surface/90 backdrop-blur border border-border rounded-xl p-8 max-w-md text-center pointer-events-auto">
-        <div className="text-5xl mb-4">🌍</div>
+        <div className="text-5xl mb-4"></div>
         <h2 className="font-heading font-bold text-text-main text-xl mb-2">
           Global News Intelligence
         </h2>

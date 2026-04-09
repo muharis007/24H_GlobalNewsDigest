@@ -28,7 +28,7 @@ export default function Timeline({ onClose }: TimelineProps) {
     <div className="fixed inset-0 z-[9998] bg-bg/95 flex flex-col items-center justify-center p-8">
       <div className="w-full max-w-2xl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-heading font-bold text-text-main text-xl">📅 News Timeline</h2>
+          <h2 className="font-heading font-bold text-text-main text-xl">News Timeline</h2>
           <button
             onClick={onClose}
             className="text-text-dim hover:text-accent-2 text-sm font-mono transition-colors"

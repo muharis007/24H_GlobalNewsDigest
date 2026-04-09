@@ -29,32 +29,32 @@ type ZapLine =
   | { type: "story"; headline: string; summary: string; source: string; link?: string };
 
 const FLAGS: Record<string, string> = {
-  PAK: "🇵🇰", SAU: "🇸🇦", GBR: "🇬🇧", USA: "🇺🇸",
-  IND: "🇮🇳", CHN: "🇨🇳", RUS: "🇷🇺", IRN: "🇮🇷",
-  ISR: "🇮🇱", UKR: "🇺🇦", AFG: "🇦🇫", IRQ: "🇮🇶",
-  SYR: "🇸🇾", TUR: "🇹🇷", EGY: "🇪🇬", FRA: "🇫🇷",
-  DEU: "🇩🇪", JPN: "🇯🇵", KOR: "🇰🇷", AUS: "🇦🇺",
-  PSE: "🇵🇸", LBN: "🇱🇧", ARE: "🇦🇪", QAT: "🇶🇦",
-  KWT: "🇰🇼", OMN: "🇴🇲", BHR: "🇧🇭", YEM: "🇾🇪",
-  JOR: "🇯🇴", LBY: "🇱🇾", SDN: "🇸🇩", SOM: "🇸🇴",
-  NGA: "🇳🇬", ZAF: "🇿🇦", BRA: "🇧🇷", MEX: "🇲🇽",
-  CAN: "🇨🇦", ITA: "🇮🇹", ESP: "🇪🇸", POL: "🇵🇱",
-  NLD: "🇳🇱", BEL: "🇧🇪", GRC: "🇬🇷", BGD: "🇧🇩",
-  LKA: "🇱🇰", MMR: "🇲🇲", THA: "🇹🇭", VNM: "🇻🇳",
-  IDN: "🇮🇩", MYS: "🇲🇾", PHL: "🇵🇭", PRK: "🇰🇵",
-  TWN: "🇹🇼", ARG: "🇦🇷", COL: "🇨🇴", VEN: "🇻🇪",
-  CHL: "🇨🇱", PER: "🇵🇪", ETH: "🇪🇹", KEN: "🇰🇪",
-  GHA: "🇬🇭", MAR: "🇲🇦", TUN: "🇹🇳", DZA: "🇩🇿",
+  PAK: "PK", SAU: "SA", GBR: "GB", USA: "US",
+  IND: "IN", CHN: "CN", RUS: "RU", IRN: "IR",
+  ISR: "IL", UKR: "UA", AFG: "AF", IRQ: "IQ",
+  SYR: "SY", TUR: "TR", EGY: "EG", FRA: "FR",
+  DEU: "DE", JPN: "JP", KOR: "KR", AUS: "AU",
+  PSE: "PS", LBN: "LB", ARE: "AE", QAT: "QA",
+  KWT: "KW", OMN: "OM", BHR: "BH", YEM: "YE",
+  JOR: "JO", LBY: "LY", SDN: "SD", SOM: "SO",
+  NGA: "NG", ZAF: "ZA", BRA: "BR", MEX: "MX",
+  CAN: "CA", ITA: "IT", ESP: "ES", POL: "PL",
+  NLD: "NL", BEL: "BE", GRC: "GR", BGD: "BD",
+  LKA: "LK", MMR: "MM", THA: "TH", VNM: "VN",
+  IDN: "ID", MYS: "MY", PHL: "PH", PRK: "KP",
+  TWN: "TW", ARG: "AR", COL: "CO", VEN: "VE",
+  CHL: "CL", PER: "PE", ETH: "ET", KEN: "KE",
+  GHA: "GH", MAR: "MA", TUN: "TN", DZA: "DZ",
 };
 
 const CATEGORY_ORDER = [
-  { key: "conflict", icon: "🔴", label: "CONFLICT" },
-  { key: "politics", icon: "🏛️", label: "POLITICS" },
-  { key: "economy", icon: "💰", label: "ECONOMY" },
-  { key: "health", icon: "🏥", label: "HEALTH" },
-  { key: "tech", icon: "💻", label: "TECH" },
-  { key: "sports", icon: "⚽", label: "SPORTS" },
-  { key: "other", icon: "📌", label: "OTHER" },
+  { key: "conflict", icon: "*", label: "CONFLICT" },
+  { key: "politics", icon: "*", label: "POLITICS" },
+  { key: "economy", icon: "*", label: "ECONOMY" },
+  { key: "health", icon: "*", label: "HEALTH" },
+  { key: "tech", icon: "*", label: "TECH" },
+  { key: "sports", icon: "*", label: "SPORTS" },
+  { key: "other", icon: "*", label: "OTHER" },
 ];
 
 const CONFLICT_PRIORITY = new Set(["PSE", "UKR", "SYR", "IRQ", "AFG", "YEM", "SDN", "SOM", "MMR", "LBY"]);
@@ -104,7 +104,7 @@ function buildLines(news: NewsData): ZapLine[] {
 
     for (const code of sortedCodes) {
       const countryEntries = byCountry.get(code)!;
-      const flag = FLAGS[code] || "🌍";
+      const flag = FLAGS[code] || "";
       lines.push({ type: "country", name: countryEntries[0].country, flag });
       for (const e of countryEntries) {
         lines.push({ type: "story", headline: e.headline, summary: e.summary, source: e.source, link: e.link });
@@ -204,7 +204,7 @@ export default function ZapMe({ news, onClose }: ZapMeProps) {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-heading font-bold text-text-main text-xl flex items-center gap-2">
-              ⚡ ZAP ME
+              ZAP ME
             </h2>
             <p className="text-text-dim text-xs font-mono mt-1">
               Catch up on {totalStories} stories in ~{readingMinutes} min
@@ -318,7 +318,6 @@ export default function ZapMe({ news, onClose }: ZapMeProps) {
           {/* End message */}
           {allDone && (
             <div className="flex flex-col items-center justify-center pt-10 pb-6 zap-line-enter">
-              <span className="text-3xl mb-3">✅</span>
               <p className="font-heading font-bold text-text-main text-lg">
                 You&apos;re all caught up!
               </p>

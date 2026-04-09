@@ -19,7 +19,25 @@ import { NewsData } from "@/types/news";
 const Map = dynamic(() => import("./components/Map"), { ssr: false });
 
 export default function Home() {
-  const [data, setData] = useState<NewsData | null>(null);
+  const [data, setData] = useState<NewsData | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const stored = localStorage.getItem("newsglobe-data");
+      const ts = localStorage.getItem("newsglobe-data-ts");
+      if (stored && ts) {
+        const age = Date.now() - parseInt(ts, 10);
+        if (age > 48 * 60 * 60 * 1000) {
+          localStorage.removeItem("newsglobe-data");
+          localStorage.removeItem("newsglobe-data-ts");
+          return null;
+        }
+        return JSON.parse(stored);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +94,7 @@ export default function Home() {
                 }
                 if (payload.countries?.length > 0) {
                   setData(payload);
+                  try { localStorage.setItem("newsglobe-data", JSON.stringify(payload)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
                 }
               } else if (currentEvent === "error") {
                 setError(payload.error);
@@ -144,7 +163,7 @@ export default function Home() {
       {/* AI Disclaimer */}
       <div className="bg-surface-2 border-b border-border px-4 py-1.5 text-center shrink-0">
         <p className="text-[11px] font-mono text-text-dim">
-          ⚠ Content is generated using AI and may contain inaccuracies. Verify important information with original sources.
+          Content is generated using AI and may contain inaccuracies. Verify important information with original sources.
         </p>
       </div>
 
@@ -180,7 +199,7 @@ export default function Home() {
                       : "bg-surface/90 text-text-dim hover:text-text-main border border-border"
                   }`}
                 >
-                  {mode === "default" ? "● Default" : mode === "heatmap" ? "🔥 Heatmap" : "😊 Sentiment"}
+                  {mode === "default" ? "Default" : mode === "heatmap" ? "Heatmap" : "Sentiment"}
                 </button>
               ))}
             </div>
@@ -266,7 +285,7 @@ export default function Home() {
           className="fixed bottom-6 right-6 z-[9000] w-12 h-12 bg-accent text-bg rounded-full shadow-lg flex items-center justify-center text-xl hover:bg-accent/80 transition-colors"
           title="Ask the News"
         >
-          💬
+          Chat
         </button>
       )}
     </div>
