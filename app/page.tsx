@@ -205,6 +205,7 @@ export default function Home() {
               {sidebarOpen ? "Hide" : `${countryCount} Countries`}
             </button>
           )}
+
         </div>
 
         {/* Sidebar */}
@@ -228,6 +229,12 @@ export default function Home() {
           />
         </div>
       </div>
+
+      {/* Footer credit */}
+      <div className="bg-surface-2 border-t border-border px-4 py-1.5 text-center shrink-0">
+        <p className="text-[11px] font-mono text-text-dim">Designed & Built by <span className="text-accent">Muhammad Haris</span></p>
+      </div>
+
       {/* Zap Me overlay */}
       {showZap && data && (
         <ZapMe news={data} onClose={() => setShowZap(false)} />
