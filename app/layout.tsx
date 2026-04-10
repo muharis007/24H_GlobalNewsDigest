@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://24-h-global-news-digest.vercel.app"),
-  title: "NewsGlobe — 24H Global News Intelligence",
+  title: "NewsGlobe -- 24H Global News Intelligence",
   description:
     "AI-powered global news dashboard. Scans ARY News, Geo TV, Arab News & BBC every few hours, summarizes by country using AI, and displays on an interactive world map.",
   keywords: ["news", "global news", "AI news", "news dashboard", "world news", "news map"],
   authors: [{ name: "Muhammad Haris" }],
   openGraph: {
-    title: "NewsGlobe — 24H Global News Intelligence",
+    title: "NewsGlobe -- 24H Global News Intelligence",
     description:
       "AI-powered news dashboard that scans 4 sources and organizes global news by country on an interactive map.",
     url: "https://24-h-global-news-digest.vercel.app",
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "NewsGlobe — 24H Global News Intelligence",
+    title: "NewsGlobe -- 24H Global News Intelligence",
     description:
       "AI-powered news dashboard that scans 4 sources and organizes global news by country on an interactive map.",
   },
@@ -39,8 +40,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

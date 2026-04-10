@@ -1,15 +1,15 @@
 "use client";
 
-import { Country, Category } from "@/types/news";
+import { Country } from "@/types/news";
 
-const CATEGORY_CONFIG: Record<string, { color: string; icon: string }> = {
-  conflict: { color: "#ff3d71", icon: "" },
-  politics: { color: "#fbbf24", icon: "" },
-  economy: { color: "#34d399", icon: "" },
-  sports: { color: "#60a5fa", icon: "" },
-  tech: { color: "#a78bfa", icon: "" },
-  health: { color: "#f472b6", icon: "" },
-  other: { color: "#94a3b8", icon: "" },
+const CATEGORY_CONFIG: Record<string, { color: string }> = {
+  conflict: { color: "#ff3d71" },
+  politics: { color: "#fbbf24" },
+  economy: { color: "#34d399" },
+  sports: { color: "#60a5fa" },
+  tech: { color: "#a78bfa" },
+  health: { color: "#f472b6" },
+  other: { color: "#94a3b8" },
 };
 
 interface TrendPanelProps {
@@ -18,7 +18,6 @@ interface TrendPanelProps {
 }
 
 export default function TrendPanel({ countries, onClose }: TrendPanelProps) {
-  // Category distribution
   const catCounts = new Map<string, number>();
   const topCountries = new Map<string, number>();
 
@@ -33,7 +32,6 @@ export default function TrendPanel({ countries, onClose }: TrendPanelProps) {
   const sortedCats = Array.from(catCounts.entries()).sort((a, b) => b[1] - a[1]);
   const sortedCountries = Array.from(topCountries.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
-  // Find trending words from headlines (simple frequency)
   const wordCounts = new Map<string, number>();
   const stopWords = new Set(["the", "a", "an", "in", "on", "at", "to", "for", "of", "is", "and", "or", "with", "by", "from", "as", "has", "have", "had", "be", "been", "was", "were", "are", "its", "it", "that", "this", "will", "after", "over", "says", "said", "new"]);
   for (const c of countries) {
@@ -52,33 +50,46 @@ export default function TrendPanel({ countries, onClose }: TrendPanelProps) {
     .slice(0, 12);
 
   return (
-    <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-xl bg-surface border border-border rounded-xl overflow-hidden max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="font-heading font-bold text-text-main text-lg">Trends</h2>
-          <button onClick={onClose} className="text-text-dim hover:text-accent-2 text-sm font-mono">✕ Close</button>
+    <div
+      className="fixed inset-0 z-[9998] flex items-center justify-center p-4 md:p-8"
+      style={{ background: "color-mix(in srgb, var(--bg) 95%, transparent)" }}
+    >
+      <div
+        className="w-full max-w-xl overflow-hidden max-h-[90vh] flex flex-col"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center justify-between p-4" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h2 className="font-display font-bold text-lg" style={{ color: "var(--text)" }}>Trends</h2>
+          <button
+            onClick={onClose}
+            className="font-data text-sm hover:opacity-70 transition-opacity"
+            style={{ color: "var(--text-dim)" }}
+          >
+            Close
+          </button>
         </div>
 
         <div className="p-4 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Category Distribution */}
           <div>
-            <h3 className="text-xs font-mono text-text-dim uppercase tracking-wider mb-3">Category Distribution</h3>
+            <h3 className="font-data text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-dim)" }}>Category Distribution</h3>
             <div className="space-y-2">
               {sortedCats.map(([cat, count]) => {
                 const cfg = CATEGORY_CONFIG[cat] ?? CATEGORY_CONFIG.other;
                 const pct = totalStories > 0 ? (count / totalStories) * 100 : 0;
                 return (
                   <div key={cat} className="flex items-center gap-2">
-                    <span className="text-xs w-16 shrink-0 font-mono capitalize" style={{ color: cfg.color }}>
-                      {cfg.icon} {cat}
+                    <span className="flex items-center gap-1.5 font-data text-xs w-20 shrink-0 capitalize" style={{ color: cfg.color }}>
+                      <span className="cat-dot" style={{ background: cfg.color }} />
+                      {cat}
                     </span>
-                    <div className="flex-1 h-4 bg-surface-2 rounded overflow-hidden">
+                    <div className="flex-1 h-4 overflow-hidden" style={{ background: "var(--surface2)" }}>
                       <div
-                        className="h-full rounded transition-all duration-500"
+                        className="h-full transition-all duration-500"
                         style={{ width: `${pct}%`, backgroundColor: cfg.color + "88" }}
                       />
                     </div>
-                    <span className="text-[10px] font-mono text-text-dim w-8 text-right">{count}</span>
+                    <span className="font-data text-[10px] w-8 text-right" style={{ color: "var(--text-dim)" }}>{count}</span>
                   </div>
                 );
               })}
@@ -87,11 +98,15 @@ export default function TrendPanel({ countries, onClose }: TrendPanelProps) {
 
           {/* Top Countries */}
           <div>
-            <h3 className="text-xs font-mono text-text-dim uppercase tracking-wider mb-3">Top Countries</h3>
+            <h3 className="font-data text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-dim)" }}>Top Countries</h3>
             <div className="flex flex-wrap gap-2">
               {sortedCountries.map(([name, count]) => (
-                <span key={name} className="text-xs font-mono bg-surface-2 border border-border text-text-main px-3 py-1.5 rounded-full">
-                  {name} <span className="text-accent">{count}</span>
+                <span
+                  key={name}
+                  className="font-data text-xs px-3 py-1.5"
+                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                >
+                  {name} <span style={{ color: "var(--accent)" }}>{count}</span>
                 </span>
               ))}
             </div>
@@ -100,14 +115,19 @@ export default function TrendPanel({ countries, onClose }: TrendPanelProps) {
           {/* Trending Keywords */}
           {trendingWords.length > 0 && (
             <div>
-              <h3 className="text-xs font-mono text-text-dim uppercase tracking-wider mb-3">Trending Keywords</h3>
+              <h3 className="font-data text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-dim)" }}>Trending Keywords</h3>
               <div className="flex flex-wrap gap-2">
                 {trendingWords.map(([word, count]) => (
                   <span
                     key={word}
-                    className="text-xs font-mono bg-accent/10 text-accent border border-accent/20 px-3 py-1 rounded-full"
+                    className="font-data text-xs px-3 py-1"
+                    style={{
+                      background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+                      color: "var(--accent)",
+                      border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
+                    }}
                   >
-                    #{word} <span className="text-text-dim">×{count}</span>
+                    #{word} <span style={{ color: "var(--text-dim)" }}>{count}</span>
                   </span>
                 ))}
               </div>

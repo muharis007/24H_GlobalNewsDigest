@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Category } from "@/types/news";
 
 const ALL_CATEGORIES: Category[] = ["politics", "conflict", "economy", "sports", "tech", "health", "other"];
@@ -76,18 +76,30 @@ export default function Preferences({ availableCountries, onClose, onSave }: Pre
   };
 
   return (
-    <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-md bg-surface border border-border rounded-xl overflow-hidden max-h-[90vh] md:max-h-none flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="font-heading font-bold text-text-main text-lg">Preferences</h2>
-          <button onClick={onClose} className="text-text-dim hover:text-accent-2 text-sm font-mono">✕</button>
+    <div
+      className="fixed inset-0 z-[9998] flex items-center justify-center p-4 md:p-8"
+      style={{ background: "color-mix(in srgb, var(--bg) 95%, transparent)" }}
+    >
+      <div
+        className="w-full max-w-md overflow-hidden max-h-[90vh] md:max-h-none flex flex-col"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center justify-between p-4" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h2 className="font-display font-bold text-lg" style={{ color: "var(--text)" }}>Preferences</h2>
+          <button
+            onClick={onClose}
+            className="font-data text-sm hover:opacity-70 transition-opacity"
+            style={{ color: "var(--text-dim)" }}
+          >
+            Close
+          </button>
         </div>
 
         <div className="p-4 space-y-6 max-h-[60vh] overflow-y-auto">
           {/* Favorite Categories */}
           <div>
-            <h3 className="text-xs font-mono text-text-dim uppercase tracking-wider mb-3">Favorite Categories</h3>
-            <p className="text-[10px] font-mono text-text-dim mb-2">Stories from these categories will be highlighted.</p>
+            <h3 className="font-data text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-dim)" }}>Favorite Categories</h3>
+            <p className="font-serif-body text-[11px] mb-2" style={{ color: "var(--text-dim)" }}>Stories from these categories will be highlighted.</p>
             <div className="flex flex-wrap gap-2">
               {ALL_CATEGORIES.map((cat) => {
                 const active = prefs.favoriteCategories.includes(cat);
@@ -96,13 +108,14 @@ export default function Preferences({ availableCountries, onClose, onSave }: Pre
                   <button
                     key={cat}
                     onClick={() => toggleCategory(cat)}
-                    className="text-[11px] font-mono px-3 py-1.5 rounded-full transition-colors capitalize"
+                    className="flex items-center gap-1.5 font-data text-[11px] px-3 py-1.5 transition-colors capitalize"
                     style={{
                       backgroundColor: active ? color + "33" : "transparent",
-                      color: active ? color : "#64748b",
-                      border: `1px solid ${active ? color + "55" : "#1e293b"}`,
+                      color: active ? color : "var(--text-dim)",
+                      border: `1px solid ${active ? color + "55" : "var(--border)"}`,
                     }}
                   >
+                    <span className="cat-dot" style={{ background: color }} />
                     {cat}
                   </button>
                 );
@@ -112,8 +125,8 @@ export default function Preferences({ availableCountries, onClose, onSave }: Pre
 
           {/* Favorite Countries */}
           <div>
-            <h3 className="text-xs font-mono text-text-dim uppercase tracking-wider mb-3">Favorite Countries</h3>
-            <p className="text-[10px] font-mono text-text-dim mb-2">These countries will appear first in the sidebar.</p>
+            <h3 className="font-data text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-dim)" }}>Favorite Countries</h3>
+            <p className="font-serif-body text-[11px] mb-2" style={{ color: "var(--text-dim)" }}>These countries will appear first in the sidebar.</p>
             <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
               {availableCountries.map((name) => {
                 const active = prefs.favoriteCountries.includes(name);
@@ -121,11 +134,12 @@ export default function Preferences({ availableCountries, onClose, onSave }: Pre
                   <button
                     key={name}
                     onClick={() => toggleCountry(name)}
-                    className={`text-[11px] font-mono px-2.5 py-1 rounded transition-colors ${
-                      active
-                        ? "bg-accent/20 text-accent border border-accent/30"
-                        : "bg-surface-2 text-text-dim border border-border hover:text-text-main"
-                    }`}
+                    className="font-data text-[11px] px-2.5 py-1 transition-colors"
+                    style={{
+                      background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--surface2)",
+                      color: active ? "var(--accent)" : "var(--text-dim)",
+                      border: `1px solid ${active ? "color-mix(in srgb, var(--accent) 30%, transparent)" : "var(--border)"}`,
+                    }}
                   >
                     {name}
                   </button>
@@ -135,23 +149,26 @@ export default function Preferences({ availableCountries, onClose, onSave }: Pre
           </div>
         </div>
 
-        <div className="p-4 border-t border-border flex items-center justify-between gap-2">
+        <div className="p-4 flex items-center justify-between gap-2" style={{ borderTop: "1px solid var(--border)" }}>
           <button
             onClick={handleReset}
-            className="text-xs font-mono text-text-dim hover:text-accent-2 transition-colors"
+            className="font-data text-xs hover:opacity-70 transition-opacity"
+            style={{ color: "var(--text-dim)" }}
           >
             Reset All
           </button>
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="text-xs font-mono text-text-dim hover:text-text-main px-3 py-1.5 rounded border border-border transition-colors"
+              className="font-data text-xs px-3 py-1.5 transition-colors"
+              style={{ color: "var(--text-dim)", border: "1px solid var(--border)" }}
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="text-xs font-mono bg-accent text-bg font-bold px-4 py-1.5 rounded hover:bg-accent/80 transition-colors"
+              className="font-data text-xs font-bold px-4 py-1.5 transition-colors"
+              style={{ background: "var(--accent)", color: "var(--bg)" }}
             >
               Save
             </button>

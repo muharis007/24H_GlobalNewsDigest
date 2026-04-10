@@ -52,7 +52,6 @@ export default function Home() {
   const [prefs, setPrefs] = useState<UserPrefs>({ favoriteCategories: [], favoriteCountries: [] });
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
 
-  // Load preferences on mount
   useEffect(() => {
     setPrefs(loadPrefs());
   }, []);
@@ -66,12 +65,10 @@ export default function Home() {
     setFetchStartedAt(Date.now());
 
     try {
-      // Phase 1: Fetch RSS items (fast)
       const rssRes = await fetch("/api/rss");
       const rssData = await rssRes.json();
 
       if (rssData.error || !rssData.items || rssData.items.length === 0) {
-        // Try cached data
         const cached = await fetch("/api/news/cached");
         if (cached.ok) {
           const cachedData = await cached.json();
@@ -90,7 +87,6 @@ export default function Home() {
 
       setLiveStatus(`Got ${rssData.count} headlines. Summarizing with AI...`);
 
-      // Phase 2: Summarize with Gemini (slower)
       const summaryRes = await fetch("/api/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,7 +95,6 @@ export default function Home() {
       const newsResult = await summaryRes.json();
 
       if (newsResult.error && !newsResult.countries?.length) {
-        // Complete failure — try cached
         const cached = await fetch("/api/news/cached");
         if (cached.ok) {
           const cachedData = await cached.json();
@@ -122,7 +117,6 @@ export default function Home() {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      // Try to load from cache on any error
       try {
         const cached = await fetch("/api/news/cached");
         if (cached.ok) {
@@ -141,7 +135,6 @@ export default function Home() {
     }
   }, []);
 
-  // Auto-fetch on mount and every 6 hours
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     fetchNews();
@@ -161,7 +154,6 @@ export default function Home() {
   const storyCount = data?.countries.reduce((sum, c) => sum + c.stories.length, 0) ?? 0;
   const countryCount = data?.countries.length ?? 0;
 
-  // Filter data based on search + category
   const filteredCountries = (data?.countries ?? [])
     .map((c) => {
       const stories = c.stories.filter((s) => {
@@ -177,7 +169,7 @@ export default function Home() {
     .filter((c) => c.stories.length > 0);
 
   return (
-    <div className="flex flex-col h-screen bg-bg text-text-main overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: "var(--bg)", color: "var(--text)" }}>
       <Header
         updatedAt={data?.updated_at ?? null}
         storyCount={storyCount}
@@ -191,9 +183,9 @@ export default function Home() {
       />
 
       {/* AI Disclaimer */}
-      <div className="bg-surface-2 border-b border-border px-4 py-1.5 text-center shrink-0">
-        <p className="text-[11px] font-mono text-text-dim">
-          Content is generated using AI and may contain inaccuracies. Verify important information with original sources.
+      <div className="px-4 py-1.5 text-center shrink-0" style={{ background: "var(--surface2)", borderBottom: "1px solid var(--border)" }}>
+        <p className="font-data text-[9px] uppercase tracking-[0.1em]" style={{ color: "var(--text-dim)" }}>
+          Content is generated using AI and may contain inaccuracies -- Verify important information with original sources.
         </p>
       </div>
 
@@ -216,8 +208,14 @@ export default function Home() {
       )}
 
       <div className="flex flex-1 overflow-hidden relative">
-        {/* Map area */}
+        {/* Map area with newspaper frame */}
         <div className="flex-1 relative">
+          {/* Map title overlay */}
+          <div className="absolute top-0 left-0 right-0 z-30 text-center pointer-events-none py-2">
+            <span className="font-data text-[9px] uppercase tracking-[0.2em] px-3 py-1" style={{ background: "rgba(10,14,23,0.7)", color: "#64748b" }}>
+              Global Coverage Map
+            </span>
+          </div>
           <Map
             countries={filteredCountries}
             selectedCountry={selectedCountry}
@@ -233,11 +231,12 @@ export default function Home() {
                 <button
                   key={mode}
                   onClick={() => setMapMode(mode)}
-                  className={`text-[10px] md:text-[10px] font-mono px-3 py-2 md:px-2.5 md:py-1 rounded transition-colors min-h-[36px] md:min-h-0 ${
+                  className="font-data text-[10px] px-3 py-2 md:px-2.5 md:py-1 transition-colors min-h-[36px] md:min-h-0"
+                  style={
                     mapMode === mode
-                      ? "bg-accent text-bg font-bold"
-                      : "bg-surface/90 text-text-dim hover:text-text-main border border-border"
-                  }`}
+                      ? { background: "var(--accent)", color: "var(--bg)", fontWeight: "bold" }
+                      : { background: "rgba(17,24,39,0.9)", color: "#94a3b8", border: "1px solid #1e293b" }
+                  }
                 >
                   {mode === "default" ? "Default" : mode === "heatmap" ? "Heatmap" : "Sentiment"}
                 </button>
@@ -254,12 +253,12 @@ export default function Home() {
           {data && (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden absolute bottom-4 right-4 z-40 bg-accent text-bg font-heading font-bold text-xs px-5 py-3 rounded-full shadow-lg min-h-[44px]"
+              className="lg:hidden absolute bottom-4 right-4 z-40 font-display font-bold text-xs px-5 py-3 shadow-lg min-h-[44px]"
+              style={{ background: "var(--accent)", color: "var(--bg)" }}
             >
               {sidebarOpen ? "Hide" : `${countryCount} Countries`}
             </button>
           )}
-
         </div>
 
         {/* Sidebar */}
@@ -273,13 +272,15 @@ export default function Home() {
             z-50 lg:z-auto
             transition-transform duration-300 ease-in-out
             shrink-0
-            rounded-t-2xl lg:rounded-none
           `}
         >
           {/* Mobile grab handle */}
-          <div className="lg:hidden flex flex-col items-center pt-2 pb-1 bg-surface rounded-t-2xl border-t border-x border-border">
+          <div
+            className="lg:hidden flex flex-col items-center pt-2 pb-1"
+            style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
+          >
             <div className="grab-handle" />
-            <span className="text-[10px] font-mono text-text-dim mt-1">Swipe or tap to dismiss</span>
+            <span className="font-data text-[10px] mt-1" style={{ color: "var(--text-dim)" }}>Swipe or tap to dismiss</span>
           </div>
           <Sidebar
             countries={filteredCountries}
@@ -291,8 +292,10 @@ export default function Home() {
       </div>
 
       {/* Footer credit */}
-      <div className="bg-surface-2 border-t border-border px-4 py-1.5 text-center shrink-0">
-        <p className="text-[11px] font-mono text-text-dim">Designed & Built by <span className="text-accent">Muhammad Haris</span></p>
+      <div className="px-4 py-1.5 text-center shrink-0" style={{ background: "var(--surface2)", borderTop: "1px solid var(--border)" }}>
+        <p className="font-data text-[10px] tracking-[0.05em]" style={{ color: "var(--text-dim)" }}>
+          Designed & Built by <span style={{ color: "var(--accent)" }}>Muhammad Haris</span>
+        </p>
       </div>
 
       {/* Zap Me overlay */}
@@ -300,10 +303,10 @@ export default function Home() {
         data ? (
           <ZapMe news={data} onClose={() => setShowZap(false)} />
         ) : (
-          <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center">
+          <div className="fixed inset-0 z-[9998] flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--bg) 95%, transparent)" }}>
             <div className="text-center">
-              <p className="text-text-dim font-mono text-sm mb-4">No news data available. Fetch news first.</p>
-              <button onClick={() => setShowZap(false)} className="text-accent font-mono text-sm hover:text-accent/80">Close</button>
+              <p className="font-serif-body text-sm mb-4" style={{ color: "var(--text-dim)" }}>No news data available yet.</p>
+              <button onClick={() => setShowZap(false)} className="font-data text-sm hover:opacity-70 transition-opacity" style={{ color: "var(--accent)" }}>Close</button>
             </div>
           </div>
         )
@@ -317,10 +320,10 @@ export default function Home() {
         data ? (
           <TrendPanel countries={data.countries} onClose={() => setShowTrends(false)} />
         ) : (
-          <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center">
+          <div className="fixed inset-0 z-[9998] flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--bg) 95%, transparent)" }}>
             <div className="text-center">
-              <p className="text-text-dim font-mono text-sm mb-4">No news data available. Fetch news first.</p>
-              <button onClick={() => setShowTrends(false)} className="text-accent font-mono text-sm hover:text-accent/80">Close</button>
+              <p className="font-serif-body text-sm mb-4" style={{ color: "var(--text-dim)" }}>No news data available yet.</p>
+              <button onClick={() => setShowTrends(false)} className="font-data text-sm hover:opacity-70 transition-opacity" style={{ color: "var(--accent)" }}>Close</button>
             </div>
           </div>
         )
@@ -338,10 +341,10 @@ export default function Home() {
         data ? (
           <NewsChat news={data} onClose={() => setShowChat(false)} />
         ) : (
-          <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center">
+          <div className="fixed inset-0 z-[9998] flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--bg) 95%, transparent)" }}>
             <div className="text-center">
-              <p className="text-text-dim font-mono text-sm mb-4">No news data available. Fetch news first.</p>
-              <button onClick={() => setShowChat(false)} className="text-accent font-mono text-sm hover:text-accent/80">Close</button>
+              <p className="font-serif-body text-sm mb-4" style={{ color: "var(--text-dim)" }}>No news data available yet.</p>
+              <button onClick={() => setShowChat(false)} className="font-data text-sm hover:opacity-70 transition-opacity" style={{ color: "var(--accent)" }}>Close</button>
             </div>
           </div>
         )
@@ -350,10 +353,11 @@ export default function Home() {
       {data && data.countries.length > 0 && !showChat && (
         <button
           onClick={() => setShowChat(true)}
-          className="fixed bottom-6 right-6 z-[9000] w-12 h-12 md:w-12 md:h-12 bg-accent text-bg rounded-full shadow-lg flex items-center justify-center text-sm md:text-xl hover:bg-accent/80 transition-colors"
+          className="fixed bottom-6 right-6 z-[9000] w-12 h-12 shadow-lg flex items-center justify-center font-data text-xs font-bold transition-colors hover:opacity-80"
+          style={{ background: "var(--accent)", color: "var(--bg)" }}
           title="Ask the News"
         >
-          Chat
+          ASK
         </button>
       )}
     </div>

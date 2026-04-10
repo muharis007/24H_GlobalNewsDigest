@@ -1,8 +1,23 @@
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,300;1,8..60,400;1,8..60,500;1,8..60,600;1,8..60,700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg: #0a0e17;
+  --surface: #111827;
+  --surface2: #1a2236;
+  --text: #e2e8f0;
+  --text-dim: #64748b;
+  --border: #1e293b;
+  --accent: #00e5ff;
+  --accent2: #ff3d71;
+  --map-bg: #0a0e17;
+  --paper-bg: #111827;
+  --paper-text: #e2e8f0;
+  --ink: #cbd5e1;
+}
 
 * {
   margin: 0;
@@ -10,137 +25,116 @@
   box-sizing: border-box;
 }
 
-body {
-  background-color: #0a0e17;
-  color: #e2e8f0;
-  font-family: "Space Grotesk", sans-serif;
+*, *::before, *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Leaflet overrides */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Source Serif 4", "Georgia", serif;
+}
+
+/* Leaflet - always dark */
 .leaflet-container {
-  background: #0a0e17 !important;
+  background: var(--map-bg) !important;
   font-family: "JetBrains Mono", monospace !important;
 }
 
-/* Pulsing marker animation */
 .pulse-marker {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
 @keyframes pulse-glow {
-  0%,
-  100% {
-    opacity: 0.6;
-    filter: drop-shadow(0 0 3px currentColor);
-  }
-  50% {
-    opacity: 1;
-    filter: drop-shadow(0 0 10px currentColor);
-  }
+  0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 3px currentColor); }
+  50% { opacity: 1; filter: drop-shadow(0 0 10px currentColor); }
 }
 
-/* Dark tooltip */
 .dark-tooltip {
   background: #1a2236 !important;
   color: #e2e8f0 !important;
   border: 1px solid #1e293b !important;
-  border-radius: 8px !important;
+  border-radius: 4px !important;
   font-family: "JetBrains Mono", monospace !important;
   font-size: 11px !important;
   padding: 6px 10px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
 }
 
 .dark-tooltip::before {
   border-top-color: #1e293b !important;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
-::-webkit-scrollbar-track {
-  background: #111827;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #334155;
-}
-
-/* Leaflet zoom controls */
 .leaflet-control-zoom a {
   background: #1a2236 !important;
   color: #e2e8f0 !important;
   border-color: #1e293b !important;
 }
-
 .leaflet-control-zoom a:hover {
   background: #111827 !important;
 }
 
-/* Zap Me line entrance animation */
-.zap-line-enter {
-  animation: zapFadeIn 300ms ease-out both;
-}
-
+.zap-line-enter { animation: zapFadeIn 300ms ease-out both; }
 @keyframes zapFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Breaking news ticker */
-.ticker-scroll {
-  animation: tickerScroll 30s linear infinite;
-}
-
+.ticker-scroll { animation: tickerScroll 30s linear infinite; }
 @keyframes tickerScroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-/* Prevent horizontal scroll on all devices */
-html,
-body {
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-}
+html, body { overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 
-/* Mobile touch targets (min 44px) */
 @media (max-width: 767px) {
   .leaflet-control-zoom a {
-    width: 36px !important;
-    height: 36px !important;
-    line-height: 36px !important;
-    font-size: 18px !important;
+    width: 36px !important; height: 36px !important;
+    line-height: 36px !important; font-size: 18px !important;
   }
-
-  .dark-tooltip {
-    font-size: 13px !important;
-    padding: 8px 12px !important;
-  }
+  .dark-tooltip { font-size: 13px !important; padding: 8px 12px !important; }
 }
 
-/* Grab handle */
 .grab-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: #334155;
-  margin: 0 auto;
+  width: 40px; height: 4px; border-radius: 2px;
+  background: var(--border); margin: 0 auto;
+}
+
+/* Newspaper utilities */
+.font-display { font-family: "Playfair Display", "Georgia", serif; }
+.font-serif-body { font-family: "Source Serif 4", "Georgia", serif; }
+.font-data { font-family: "JetBrains Mono", monospace; }
+
+.rule-double-top { border-top: 3px double var(--border); }
+.column-rule { border-left: 1px solid var(--border); }
+
+.cat-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 2px; vertical-align: middle; margin-right: 4px;
+}
+.sentiment-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; vertical-align: middle; margin-right: 3px;
+}
+.source-dot {
+  display: inline-block; width: 5px; height: 5px;
+  border-radius: 50%; vertical-align: middle; margin-right: 4px;
+}
+.iso-badge {
+  display: inline-block; font-family: "JetBrains Mono", monospace;
+  font-size: 9px; padding: 1px 4px; border-radius: 3px;
+  background: var(--surface2); border: 1px solid var(--border);
+  letter-spacing: 0.05em; vertical-align: middle; color: var(--text-dim);
+}
+
+/* Print stylesheet */
+@media print {
+  .no-print, .leaflet-container, header, .ticker-scroll, button, .floating-chat { display: none !important; }
+  body { background: white !important; color: black !important; font-size: 12pt; }
 }

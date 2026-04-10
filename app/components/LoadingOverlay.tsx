@@ -40,14 +40,20 @@ export default function LoadingOverlay({ status, startedAt }: LoadingOverlayProp
   const displayMessage = status || ROTATING_MESSAGES[msgIndex];
 
   return (
-    <div className="absolute inset-0 z-[1000] flex items-center justify-center" style={{ background: "rgba(10, 14, 23, 0.85)" }}>
+    <div
+      className="absolute inset-0 z-[1000] flex items-center justify-center"
+      style={{ background: "color-mix(in srgb, var(--bg) 85%, transparent)" }}
+    >
       <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-[3px] border-border border-t-accent rounded-full animate-spin" />
-        <p className="text-text-main font-mono text-sm text-center">
+        <div
+          className="w-10 h-10 border-[3px] rounded-full animate-spin"
+          style={{ borderColor: "var(--border)", borderTopColor: "var(--accent)" }}
+        />
+        <p className="font-serif-body text-sm text-center" style={{ color: "var(--text)" }}>
           {displayMessage}
         </p>
         {slow && (
-          <p className="text-text-dim font-mono text-xs text-center">
+          <p className="font-data text-xs text-center" style={{ color: "var(--text-dim)" }}>
             This is taking longer than usual. Please wait...
           </p>
         )}

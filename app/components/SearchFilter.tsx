@@ -3,7 +3,7 @@
 import { Category } from "@/types/news";
 
 const CATEGORIES: { key: Category | "all"; label: string; color: string }[] = [
-  { key: "all", label: "All", color: "#00e5ff" },
+  { key: "all", label: "All", color: "var(--accent)" },
   { key: "conflict", label: "Conflict", color: "#ff3d71" },
   { key: "politics", label: "Politics", color: "#fbbf24" },
   { key: "economy", label: "Economy", color: "#34d399" },
@@ -25,7 +25,10 @@ interface SearchFilterProps {
 
 export default function SearchFilter({ filter, onChange }: SearchFilterProps) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-surface border-b border-border shrink-0 overflow-x-auto">
+    <div
+      className="flex items-center gap-2 px-4 py-2 shrink-0 overflow-x-auto"
+      style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}
+    >
       {/* Search input */}
       <div className="relative shrink-0">
         <input
@@ -33,12 +36,16 @@ export default function SearchFilter({ filter, onChange }: SearchFilterProps) {
           placeholder="Search headlines..."
           value={filter.query}
           onChange={(e) => onChange({ ...filter, query: e.target.value })}
-          className="bg-surface-2 border border-border text-text-main text-xs font-mono rounded px-3 py-1.5 pl-7 w-48 focus:outline-none focus:border-accent/50 placeholder:text-text-dim"
+          className="font-serif-body text-xs px-3 py-1.5 w-48 focus:outline-none"
+          style={{
+            background: "var(--surface2)",
+            border: "1px solid var(--border)",
+            color: "var(--text)",
+          }}
         />
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim text-xs">🔍</span>
       </div>
 
-      {/* Category pills */}
+      {/* Category pills with colored dots */}
       <div className="flex items-center gap-1">
         {CATEGORIES.map((cat) => {
           const active = filter.category === cat.key;
@@ -46,13 +53,14 @@ export default function SearchFilter({ filter, onChange }: SearchFilterProps) {
             <button
               key={cat.key}
               onClick={() => onChange({ ...filter, category: cat.key })}
-              className="text-[10px] font-mono px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
+              className="flex items-center gap-1.5 font-data text-[10px] px-2.5 py-1 transition-colors whitespace-nowrap uppercase tracking-[0.05em]"
               style={{
-                backgroundColor: active ? cat.color + "33" : "transparent",
-                color: active ? cat.color : "#64748b",
-                border: `1px solid ${active ? cat.color + "55" : "transparent"}`,
+                backgroundColor: active ? "color-mix(in srgb, " + cat.color + " 20%, transparent)" : "transparent",
+                color: active ? cat.color : "var(--text-dim)",
+                border: active ? "1px solid color-mix(in srgb, " + cat.color + " 35%, transparent)" : "1px solid transparent",
               }}
             >
+              {cat.key !== "all" && <span className="cat-dot" style={{ background: cat.color }} />}
               {cat.label}
             </button>
           );

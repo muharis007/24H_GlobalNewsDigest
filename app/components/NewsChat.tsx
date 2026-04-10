@@ -67,21 +67,36 @@ export default function NewsChat({ news, onClose }: NewsChatProps) {
   }, [input, loading]);
 
   return (
-    <div className="fixed inset-0 z-[9998] bg-bg/95 flex items-center justify-center p-0 md:p-4">
-      <div className="w-full h-full md:max-w-lg md:h-[70vh] bg-surface border-0 md:border border-border md:rounded-xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[9998] flex items-center justify-center p-0 md:p-4" style={{ background: "color-mix(in srgb, var(--bg) 95%, transparent)" }}>
+      <div
+        className="w-full h-full md:max-w-lg md:h-[70vh] flex flex-col overflow-hidden"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
-          <h2 className="font-heading font-bold text-text-main text-lg">Ask the News</h2>
-          <button onClick={onClose} className="text-text-dim hover:text-accent-2 text-sm font-mono">✕</button>
+        <div className="flex items-center justify-between p-4 shrink-0" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h2 className="font-display font-bold text-lg" style={{ color: "var(--text)" }}>Ask the News</h2>
+          <button
+            onClick={onClose}
+            className="font-data text-sm hover:opacity-70 transition-opacity"
+            style={{ color: "var(--text-dim)" }}
+          >
+            Close
+          </button>
         </div>
 
         {/* Messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
           {messages.length === 0 && (
-            <div className="text-center text-text-dim text-xs font-mono py-8">
-              Ask anything about today&apos;s news.<br />
-              e.g. &quot;What&apos;s happening in Pakistan?&quot; or &quot;Summarize the conflicts.&quot;
-              <p className="mt-3 text-[10px] text-text-dim/60">Answers are AI-generated and may contain inaccuracies.</p>
+            <div className="text-center py-8">
+              <p className="font-serif-body text-sm" style={{ color: "var(--text-dim)" }}>
+                Ask anything about today&apos;s news.
+              </p>
+              <p className="font-serif-body text-xs mt-1" style={{ color: "var(--text-dim)" }}>
+                e.g. &quot;What&apos;s happening in Pakistan?&quot; or &quot;Summarize the conflicts.&quot;
+              </p>
+              <p className="font-data text-[9px] mt-3 uppercase tracking-[0.1em]" style={{ color: "var(--text-dim)", opacity: 0.6 }}>
+                Answers are AI-generated and may contain inaccuracies.
+              </p>
             </div>
           )}
           {messages.map((msg, i) => (
@@ -90,11 +105,12 @@ export default function NewsChat({ news, onClose }: NewsChatProps) {
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                className="max-w-[80%] px-3 py-2 text-sm"
+                style={
                   msg.role === "user"
-                    ? "bg-accent/20 text-accent font-mono"
-                    : "bg-surface-2 text-text-main border border-border"
-                }`}
+                    ? { background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)", fontFamily: "var(--font-data, monospace)", fontSize: "13px" }
+                    : { background: "var(--surface2)", color: "var(--text)", border: "1px solid var(--border)", fontFamily: "var(--font-serif, serif)", fontSize: "14px", lineHeight: "1.6" }
+                }
               >
                 {msg.content}
               </div>
@@ -102,7 +118,10 @@ export default function NewsChat({ news, onClose }: NewsChatProps) {
           ))}
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm text-text-dim font-mono animate-pulse">
+              <div
+                className="px-3 py-2 text-sm animate-pulse font-data"
+                style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-dim)" }}
+              >
                 Thinking...
               </div>
             </div>
@@ -110,7 +129,7 @@ export default function NewsChat({ news, onClose }: NewsChatProps) {
         </div>
 
         {/* Input */}
-        <div className="p-3 border-t border-border shrink-0">
+        <div className="p-3 shrink-0" style={{ borderTop: "1px solid var(--border)" }}>
           <div className="flex gap-2">
             <input
               ref={inputRef}
@@ -120,12 +139,18 @@ export default function NewsChat({ news, onClose }: NewsChatProps) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               disabled={loading}
-              className="flex-1 bg-surface-2 border border-border text-text-main text-sm font-mono rounded px-3 py-2 focus:outline-none focus:border-accent/50 placeholder:text-text-dim disabled:opacity-50"
+              className="flex-1 font-serif-body text-sm px-3 py-2 focus:outline-none disabled:opacity-50"
+              style={{
+                background: "var(--surface2)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}
             />
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="bg-accent text-bg font-bold text-sm px-4 py-2 rounded hover:bg-accent/80 transition-colors disabled:opacity-30 disabled:cursor-not-allowed font-mono"
+              className="font-data text-sm font-bold px-4 py-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-[0.05em]"
+              style={{ background: "var(--accent)", color: "var(--bg)" }}
             >
               Send
             </button>

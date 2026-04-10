@@ -14,20 +14,30 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: "#94a3b8",
 };
 
+const SOURCE_COLORS: Record<string, string> = {
+  "ARY News": "#34d399",
+  "Geo TV": "#60a5fa",
+  "Arab News": "#fbbf24",
+  "BBC": "#ff3d71",
+  "BBC News": "#ff3d71",
+};
+
 const LANGUAGES = [
-  { code: "ur", label: "اردو" },
-  { code: "ar", label: "العربية" },
-  { code: "fr", label: "Français" },
-  { code: "es", label: "Español" },
-  { code: "zh", label: "中文" },
+  { code: "ur", label: "Urdu" },
+  { code: "ar", label: "Arabic" },
+  { code: "fr", label: "French" },
+  { code: "es", label: "Spanish" },
+  { code: "zh", label: "Chinese" },
 ];
 
 interface StoryCardProps {
   story: Story;
+  isLead?: boolean;
 }
 
-export default function StoryCard({ story }: StoryCardProps) {
+export default function StoryCard({ story, isLead }: StoryCardProps) {
   const badgeColor = CATEGORY_COLORS[story.category] || CATEGORY_COLORS.other;
+  const sourceColor = SOURCE_COLORS[story.source] || "#94a3b8";
   const [translated, setTranslated] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -55,37 +65,65 @@ export default function StoryCard({ story }: StoryCardProps) {
   };
 
   return (
-    <div className="p-3 rounded-lg bg-surface-2 border border-border hover:border-accent/30 transition-colors">
-      <div className="flex items-center gap-2 mb-2 flex-wrap">
-        <span
-          className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded"
-          style={{ backgroundColor: badgeColor + "22", color: badgeColor }}
-        >
-          {story.category}
+    <article
+      className="py-3 hover:bg-[var(--surface2)]/30 transition-colors"
+      style={{ borderBottom: "1px solid var(--border)" }}
+    >
+      {/* Category tag */}
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="flex items-center gap-1">
+          <span className="cat-dot" style={{ background: badgeColor }} />
+          <span
+            className="font-serif italic text-[11px] tracking-wide"
+            style={{ color: badgeColor }}
+          >
+            {story.category.charAt(0).toUpperCase() + story.category.slice(1)}
+          </span>
         </span>
         {story.breaking && (
-          <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded bg-accent-2/20 text-accent-2">
+          <span className="font-data text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wider" style={{ color: "var(--accent2)", background: "var(--accent2)", backgroundColor: "rgba(193,18,31,0.15)" }}>
             Breaking
           </span>
         )}
         <SentimentBadge sentiment={story.sentiment} />
-        <span className="text-[10px] text-text-dim font-mono">{story.source}</span>
       </div>
-      <h4 className="text-sm font-heading font-semibold text-text-main leading-tight mb-1">
+
+      {/* Headline */}
+      <h4
+        className={`font-display font-bold leading-[1.15] mb-1.5 ${isLead ? "text-[20px]" : "text-[15px]"}`}
+        style={{ color: "var(--text)" }}
+      >
         {story.headline}
       </h4>
-      <p className="text-xs text-text-dim leading-relaxed">{story.summary}</p>
-      {story.link && (
-        <a
-          href={story.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-2 text-[11px] font-mono text-accent hover:text-accent/80 transition-colors"
-        >
-          Read more →
-        </a>
-      )}
-      {/* Share & Translate row */}
+
+      {/* Summary */}
+      <p className="font-serif-body text-[14px] leading-[1.6]" style={{ color: "var(--ink)" }}>
+        {story.summary}
+      </p>
+
+      {/* Source attribution — right-aligned small caps */}
+      <div className="flex items-center justify-end gap-2 mt-2">
+        <span className="source-dot" style={{ background: sourceColor }} />
+        <span className="font-data text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--text-dim)" }}>
+          {story.source}
+        </span>
+        {story.link && (
+          <>
+            <span style={{ color: "var(--border)" }}>|</span>
+            <a
+              href={story.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-data text-[10px] uppercase tracking-[0.05em] hover:opacity-70 transition-opacity"
+              style={{ color: "var(--accent)" }}
+            >
+              Read more
+            </a>
+          </>
+        )}
+      </div>
+
+      {/* Actions row */}
       <div className="mt-2 flex items-center gap-2 flex-wrap">
         <button
           onClick={async () => {
@@ -98,11 +136,12 @@ export default function StoryCard({ story }: StoryCardProps) {
               setTimeout(() => setCopied(false), 2000);
             }
           }}
-          className="text-[10px] font-mono text-text-dim hover:text-accent transition-colors"
+          className="font-data text-[10px] hover:opacity-70 transition-opacity uppercase tracking-wider"
+          style={{ color: "var(--text-dim)" }}
         >
           {copied ? "Copied" : "Share"}
         </button>
-        <span className="text-border">|</span>
+        <span style={{ color: "var(--border)" }}>|</span>
         <button
           onClick={() => {
             if (speaking) {
@@ -117,37 +156,40 @@ export default function StoryCard({ story }: StoryCardProps) {
               speechSynthesis.speak(utter);
             }
           }}
-          className="text-[10px] font-mono text-text-dim hover:text-accent transition-colors"
+          className="font-data text-[10px] hover:opacity-70 transition-opacity uppercase tracking-wider"
+          style={{ color: "var(--text-dim)" }}
         >
           {speaking ? "Stop" : "Listen"}
         </button>
-        <span className="text-border">|</span>
-        <span className="text-[10px] text-text-dim font-mono">Translate:</span>
+        <span style={{ color: "var(--border)" }}>|</span>
+        <span className="font-data text-[10px] uppercase tracking-wider" style={{ color: "var(--text-dim)" }}>Translate:</span>
         {LANGUAGES.map((lang) => (
           <button
             key={lang.code}
             onClick={() => handleTranslate(lang.code)}
             disabled={translating}
-            className="text-[10px] font-mono text-text-dim hover:text-accent transition-colors disabled:opacity-30"
+            className="font-data text-[10px] hover:opacity-70 uppercase tracking-wider transition-opacity disabled:opacity-30"
+            style={{ color: "var(--text-dim)" }}
           >
             {lang.label}
           </button>
         ))}
       </div>
       {translating && (
-        <p className="text-[10px] font-mono text-text-dim animate-pulse mt-1">Translating...</p>
+        <p className="font-data text-[10px] animate-pulse mt-1" style={{ color: "var(--text-dim)" }}>Translating...</p>
       )}
       {translated && (
-        <div className="mt-2 p-2 bg-bg rounded border border-border">
-          <p className="text-xs text-text-main leading-relaxed">{translated}</p>
+        <div className="mt-2 p-2 rounded" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <p className="font-serif-body text-[13px] leading-relaxed" style={{ color: "var(--text)" }}>{translated}</p>
           <button
             onClick={() => setTranslated(null)}
-            className="text-[10px] font-mono text-text-dim hover:text-accent-2 mt-1"
+            className="font-data text-[10px] mt-1 hover:opacity-70 transition-opacity"
+            style={{ color: "var(--text-dim)" }}
           >
-            ✕ Hide
+            Close
           </button>
         </div>
       )}
-    </div>
+    </article>
   );
 }

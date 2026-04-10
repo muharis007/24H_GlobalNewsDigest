@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { useTheme } from "../contexts/ThemeContext";
+
 interface HeaderProps {
   updatedAt: string | null;
   storyCount: number;
@@ -12,122 +15,149 @@ interface HeaderProps {
   onPrefs: () => void;
 }
 
+function getEditionLabel(): string {
+  const now = new Date();
+  const hour = now.getHours();
+  if (hour < 12) return "MORNING EDITION";
+  if (hour < 18) return "AFTERNOON EDITION";
+  return "EVENING EDITION";
+}
+
+function getDateLine(): string {
+  const now = new Date();
+  return now.toLocaleDateString("en-GB", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).toUpperCase();
+}
+
 export default function Header({ updatedAt, storyCount, countryCount, loading, hasNews, onZap, onTimeline, onTrends, onPrefs }: HeaderProps) {
-  const formattedTime = updatedAt
-    ? new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : null;
+  const { mode, toggleMode } = useTheme();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const disabledClass = !hasNews
     ? "opacity-[0.35] cursor-not-allowed pointer-events-none"
     : "";
 
+  const btnBase = "border border-[var(--border)] text-[var(--text-dim)] font-display text-[10px] px-3 py-1.5 tracking-[0.1em] uppercase hover:bg-[var(--surface2)] hover:text-[var(--text)] transition-colors";
+
   return (
-    <header className="h-14 bg-surface border-b border-border flex items-center justify-between px-4 shrink-0 z-50">
-      {/* Left side */}
-      <div className="flex items-center gap-3">
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-        </span>
-        <span className="font-heading font-bold text-text-main text-lg tracking-tight">
-          NEWSGLOBE
-        </span>
-        <span className="text-[10px] font-mono bg-accent/10 text-accent px-2 py-0.5 rounded uppercase tracking-widest hidden sm:inline">
-          24H Digest
-        </span>
+    <header className="shrink-0 z-50" style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
+      {/* Masthead */}
+      <div className="text-center py-3 md:py-4">
+        <h1
+          className="font-display font-bold tracking-[0.15em] text-2xl md:text-3xl"
+          style={{ color: "var(--text)" }}
+        >
+          N E W S G L O B E
+        </h1>
+        <p
+          className="font-display italic text-xs md:text-sm mt-0.5 tracking-wide"
+          style={{ color: "var(--text-dim)" }}
+        >
+          24-Hour Global News Intelligence
+        </p>
       </div>
 
-      {/* Right side */}
-      <div className="flex items-center gap-2 md:gap-4">
-        {formattedTime && (
-          <span className="text-xs font-mono text-text-dim hidden sm:block">
-            Updated {formattedTime}
-          </span>
-        )}
-        {storyCount > 0 && (
-          <>
-            <span className="text-xs font-mono text-accent hidden sm:block">
-              {storyCount} stories
-            </span>
-            <span className="text-xs font-mono text-text-dim hidden md:block">
-              {countryCount} countries
-            </span>
-          </>
-        )}
-        {loading && (
-          <span className="text-[10px] font-mono text-accent animate-pulse">Scanning...</span>
-        )}
-        <button
-          onClick={onPrefs}
-          disabled={!hasNews}
-          className={`border border-border text-text-dim font-heading font-bold text-xs px-3 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider hidden md:inline-flex ${disabledClass}`}
-        >
+      {/* Edition line */}
+      <div
+        className="text-center py-1.5 px-4"
+        style={{
+          borderTop: "1px solid var(--border)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <p className="font-data text-[10px] tracking-[0.15em] uppercase" style={{ color: "var(--text-dim)" }}>
+          {getDateLine()}
+          <span className="mx-2" style={{ color: "var(--border)" }}>//</span>
+          {getEditionLabel()}
+          {storyCount > 0 && (
+            <>
+              <span className="mx-2" style={{ color: "var(--border)" }}>//</span>
+              <span style={{ color: "var(--accent)" }}>{storyCount} Stories</span>
+              <span className="mx-2" style={{ color: "var(--border)" }}>//</span>
+              {countryCount} Countries
+            </>
+          )}
+          {loading && (
+            <>
+              <span className="mx-2" style={{ color: "var(--border)" }}>//</span>
+              <span className="animate-pulse" style={{ color: "var(--accent)" }}>Scanning...</span>
+            </>
+          )}
+        </p>
+      </div>
+
+      {/* Button row - desktop */}
+      <div className="hidden md:flex items-center justify-center gap-2 py-2 px-4">
+        <button onClick={onPrefs} disabled={!hasNews} className={`${btnBase} ${disabledClass}`}>
           Settings
         </button>
-        <button
-          onClick={onTrends}
-          disabled={!hasNews}
-          className={`border border-border text-text-dim font-heading font-bold text-xs px-3 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider hidden md:inline-flex ${disabledClass}`}
-        >
+        <button onClick={onTrends} disabled={!hasNews} className={`${btnBase} ${disabledClass}`}>
           Trends
         </button>
-        <button
-          onClick={onTimeline}
-          disabled={!hasNews}
-          className={`border border-border text-text-dim font-heading font-bold text-xs px-3 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider hidden md:inline-flex ${disabledClass}`}
-        >
+        <button onClick={onTimeline} disabled={!hasNews} className={`${btnBase} ${disabledClass}`}>
           Timeline
         </button>
         <button
           onClick={onZap}
           disabled={!hasNews}
-          className={`border border-accent text-accent font-heading font-bold text-xs px-4 py-1.5 rounded hover:bg-accent hover:text-bg transition-colors uppercase tracking-wider hidden md:inline-flex ${!hasNews ? "opacity-[0.35] cursor-not-allowed pointer-events-none" : ""}`}
+          className={`border font-display text-[10px] px-3 py-1.5 tracking-[0.1em] uppercase transition-colors ${
+            !hasNews
+              ? "opacity-[0.35] cursor-not-allowed pointer-events-none border-[var(--border)] text-[var(--text-dim)]"
+              : "border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
+          }`}
         >
           Zap Me
         </button>
-        {/* Mobile menu button */}
+        <button onClick={toggleMode} className={btnBase}>
+          {mode === "dark" ? "Light" : "Dark"}
+        </button>
+      </div>
+
+      {/* Mobile button row */}
+      <div className="md:hidden flex items-center justify-center gap-2 py-2 px-4">
+        <button onClick={toggleMode} className={btnBase}>
+          {mode === "dark" ? "Light" : "Dark"}
+        </button>
         <button
-          onClick={() => {
-            const el = document.getElementById("mobile-header-menu");
-            if (el) el.classList.toggle("hidden");
-          }}
-          className="md:hidden border border-border text-text-dim font-heading font-bold text-xs px-2.5 py-1.5 rounded hover:bg-surface-2 hover:text-text-main transition-colors"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className={btnBase}
         >
           Menu
         </button>
       </div>
 
-      {/* Mobile dropdown menu */}
-      <div id="mobile-header-menu" className="hidden md:hidden absolute top-14 right-0 left-0 bg-surface border-b border-border z-50 p-3 flex flex-col gap-2">
-        <button
-          onClick={() => { onPrefs(); document.getElementById("mobile-header-menu")?.classList.add("hidden"); }}
-          disabled={!hasNews}
-          className={`w-full text-left border border-border text-text-dim font-heading font-bold text-xs px-3 py-2 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider ${disabledClass}`}
+      {/* Mobile dropdown */}
+      {mobileMenuOpen && (
+        <div
+          className="md:hidden flex flex-col gap-2 p-3"
+          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
         >
-          Settings
-        </button>
-        <button
-          onClick={() => { onTrends(); document.getElementById("mobile-header-menu")?.classList.add("hidden"); }}
-          disabled={!hasNews}
-          className={`w-full text-left border border-border text-text-dim font-heading font-bold text-xs px-3 py-2 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider ${disabledClass}`}
-        >
-          Trends
-        </button>
-        <button
-          onClick={() => { onTimeline(); document.getElementById("mobile-header-menu")?.classList.add("hidden"); }}
-          disabled={!hasNews}
-          className={`w-full text-left border border-border text-text-dim font-heading font-bold text-xs px-3 py-2 rounded hover:bg-surface-2 hover:text-text-main transition-colors uppercase tracking-wider ${disabledClass}`}
-        >
-          Timeline
-        </button>
-        <button
-          onClick={() => { onZap(); document.getElementById("mobile-header-menu")?.classList.add("hidden"); }}
-          disabled={!hasNews}
-          className={`w-full text-left border border-accent text-accent font-heading font-bold text-xs px-3 py-2 rounded hover:bg-accent hover:text-bg transition-colors uppercase tracking-wider ${!hasNews ? "opacity-[0.35] cursor-not-allowed pointer-events-none" : ""}`}
-        >
-          Zap Me
-        </button>
-      </div>
+          <button onClick={() => { onPrefs(); setMobileMenuOpen(false); }} disabled={!hasNews} className={`w-full text-left ${btnBase} ${disabledClass}`}>
+            Settings
+          </button>
+          <button onClick={() => { onTrends(); setMobileMenuOpen(false); }} disabled={!hasNews} className={`w-full text-left ${btnBase} ${disabledClass}`}>
+            Trends
+          </button>
+          <button onClick={() => { onTimeline(); setMobileMenuOpen(false); }} disabled={!hasNews} className={`w-full text-left ${btnBase} ${disabledClass}`}>
+            Timeline
+          </button>
+          <button
+            onClick={() => { onZap(); setMobileMenuOpen(false); }}
+            disabled={!hasNews}
+            className={`w-full text-left border font-display text-[10px] px-3 py-1.5 tracking-[0.1em] uppercase transition-colors ${
+              !hasNews
+                ? "opacity-[0.35] cursor-not-allowed pointer-events-none border-[var(--border)] text-[var(--text-dim)]"
+                : "border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
+            }`}
+          >
+            Zap Me
+          </button>
+        </div>
+      )}
     </header>
   );
 }
