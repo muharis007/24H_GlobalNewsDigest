@@ -5,6 +5,12 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Country } from "@/types/news";
 import { getCountryCoords } from "@/lib/countries";
+import { useTheme } from "@/app/contexts/ThemeContext";
+
+const TILE_URLS = {
+  dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?language=en",
+  light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?language=en",
+};
 
 interface MapProps {
   countries: Country[];
@@ -15,8 +21,10 @@ interface MapProps {
 }
 
 export default function Map({ countries, selectedCountry, onSelectCountry, heatmapMode, sentimentMode }: MapProps) {
+  const { mode } = useTheme();
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.CircleMarker[]>([]);
+  const tileRef = useRef<L.TileLayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,7 +47,7 @@ export default function Map({ countries, selectedCountry, onSelectCountry, heatm
       worldCopyJump: false,
     });
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?language=en", {
+    tileRef.current = L.tileLayer(TILE_URLS[mode], {
       maxZoom: 8,
       noWrap: true,
       bounds: bounds,
@@ -50,8 +58,16 @@ export default function Map({ countries, selectedCountry, onSelectCountry, heatm
     return () => {
       mapRef.current?.remove();
       mapRef.current = null;
+      tileRef.current = null;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Swap tile layer when theme mode changes
+  useEffect(() => {
+    if (!mapRef.current || !tileRef.current) return;
+    tileRef.current.setUrl(TILE_URLS[mode]);
+  }, [mode]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -75,20 +91,18 @@ export default function Map({ countries, selectedCountry, onSelectCountry, heatm
       let fillOpacity: number;
 
       if (heatmapMode) {
-        // Heatmap: size and opacity based on story count intensity
         const intensity = storyCount / maxStories;
         radius = Math.max(intensity * 35 + 10, 12);
         color = intensity > 0.6 ? "#ff3d71" : intensity > 0.3 ? "#fbbf24" : "#34d399";
         fillOpacity = 0.3 + intensity * 0.5;
       } else if (sentimentMode) {
-        // Sentiment: color based on sentiment_score
         const score = country.sentiment_score ?? 0;
         radius = Math.min(Math.max(storyCount * 3 + 5, 8), 20);
         color = score > 0.2 ? "#34d399" : score < -0.2 ? "#ff3d71" : "#fbbf24";
         fillOpacity = 0.6;
       } else {
         radius = Math.min(Math.max(storyCount * 3 + 5, 8), 20);
-        color = hasConflict ? "#ff3d71" : "#00e5ff";
+        color = hasConflict ? "#ff3d71" : mode === "light" ? "#0077b6" : "#00e5ff";
         fillOpacity = 0.6;
       }
 
@@ -109,7 +123,7 @@ export default function Map({ countries, selectedCountry, onSelectCountry, heatm
       marker.bindTooltip(
         `<strong>${country.name}</strong><br/>${storyCount} ${storyCount === 1 ? "story" : "stories"}${tooltipExtra}`,
         {
-          className: "dark-tooltip",
+          className: mode === "light" ? "light-tooltip" : "dark-tooltip",
           direction: "top",
           offset: [0, -radius],
         }
@@ -121,7 +135,7 @@ export default function Map({ countries, selectedCountry, onSelectCountry, heatm
 
       markersRef.current.push(marker);
     });
-  }, [countries, selectedCountry, onSelectCountry, heatmapMode, sentimentMode]);
+  }, [countries, selectedCountry, onSelectCountry, heatmapMode, sentimentMode, mode]);
 
   return (
     <div

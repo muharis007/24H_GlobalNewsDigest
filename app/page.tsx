@@ -227,7 +227,7 @@ export default function Home() {
         <div className="flex-1 relative">
           {/* Map title overlay */}
           <div className="absolute top-0 left-0 right-0 z-30 text-center pointer-events-none py-2">
-            <span className="font-data text-[9px] uppercase tracking-[0.2em] px-3 py-1" style={{ background: "rgba(10,14,23,0.7)", color: "#64748b" }}>
+            <span className="font-data text-[9px] uppercase tracking-[0.2em] px-3 py-1" style={{ background: "color-mix(in srgb, var(--bg) 70%, transparent)", color: "var(--text-dim)" }}>
               Global Coverage Map
             </span>
           </div>
@@ -250,7 +250,7 @@ export default function Home() {
                   style={
                     mapMode === mode
                       ? { background: "var(--accent)", color: "var(--bg)", fontWeight: "bold" }
-                      : { background: "rgba(17,24,39,0.9)", color: "#94a3b8", border: "1px solid #1e293b" }
+                      : { background: "color-mix(in srgb, var(--surface) 90%, transparent)", color: "var(--text-dim)", border: "1px solid var(--border)" }
                   }
                 >
                   {mode === "default" ? "Default" : mode === "heatmap" ? "Heatmap" : "Sentiment"}

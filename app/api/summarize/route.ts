@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { summarizeNews } from "@/lib/gemini";
-import { getCachedDataStale, setCachedData } from "@/lib/cache";
+import { getCachedData, getCachedDataStale, setCachedData } from "@/lib/cache";
 import { NewsData, Country, Story } from "@/types/news";
 import { RawHeadline } from "@/lib/rss";
 
@@ -100,6 +100,13 @@ export async function POST(request: Request) {
 
     if (!headlines || headlines.length === 0) {
       return NextResponse.json({ error: "No headlines provided", countries: [], updated_at: new Date().toISOString() }, { status: 400 });
+    }
+
+    // Return fresh server-side cache if available (avoids redundant Gemini calls from multiple visitors)
+    const freshCache = getCachedData();
+    if (freshCache) {
+      console.log("[Summarize] Returning fresh server-side cached data");
+      return NextResponse.json(freshCache);
     }
 
     // Build link map for post-processing

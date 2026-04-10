@@ -72,6 +72,10 @@ export async function summarizeNews(headlines: string): Promise<string> {
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
         console.error(`[Gemini] ${modelName} attempt ${attempt + 1} failed:`, lastError.message);
+        // Don't retry or try other models for auth/key errors
+        if (lastError.message.includes("API_KEY_INVALID") || lastError.message.includes("API key expired") || lastError.message.includes("401") || lastError.message.includes("403")) {
+          throw lastError;
+        }
         if (!lastError.message.includes("503") && !lastError.message.includes("429") && !lastError.message.includes("high demand")) {
           break; // Don't retry non-transient errors on this model, try next model
         }
