@@ -8,7 +8,7 @@ import { getCountryCoords } from "@/lib/countries";
 import { useTheme } from "@/app/contexts/ThemeContext";
 
 const TILE_URLS = {
-  dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?language=en",
+  dark: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?language=en",
   light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?language=en",
 };
 

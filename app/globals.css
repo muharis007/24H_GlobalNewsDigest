@@ -41,9 +41,9 @@ body {
   font-family: "JetBrains Mono", monospace !important;
 }
 
-/* Tint dark map tiles to match the app's navy-blue palette */
+/* Tint dark map tiles: invert light tiles to get rich navy-blue dark map */
 [data-theme="dark"] .leaflet-tile-pane {
-  filter: sepia(0.3) hue-rotate(180deg) saturate(2) brightness(0.7);
+  filter: invert(1) hue-rotate(200deg) brightness(0.8) contrast(1.15) saturate(1.4);
 }
 [data-theme="light"] .leaflet-tile-pane {
   filter: none;
