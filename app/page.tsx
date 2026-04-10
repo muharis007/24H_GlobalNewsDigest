@@ -137,11 +137,26 @@ export default function Home() {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    fetchNews();
-    intervalRef.current = setInterval(() => {
+    // Only fetch if cached data is older than 6 hours (or missing)
+    const ts = localStorage.getItem("newsglobe-data-ts");
+    const age = ts ? Date.now() - parseInt(ts, 10) : Infinity;
+    const SIX_HOURS = 6 * 60 * 60 * 1000;
+
+    if (age >= SIX_HOURS) {
       fetchNews();
-    }, 6 * 60 * 60 * 1000);
+    }
+
+    // Schedule next fetch based on remaining time
+    const firstDelay = age < SIX_HOURS ? SIX_HOURS - age : SIX_HOURS;
+    const firstTimer = setTimeout(() => {
+      fetchNews();
+      intervalRef.current = setInterval(() => {
+        fetchNews();
+      }, SIX_HOURS);
+    }, firstDelay);
+
     return () => {
+      clearTimeout(firstTimer);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [fetchNews]);
