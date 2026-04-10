@@ -4,7 +4,7 @@ import { NewsData } from "@/types/news";
 
 const CACHE_FILE = path.join("/tmp", "newsglobe-cache.json");
 const SNAPSHOT_DIR = path.join("/tmp", "newsglobe-snapshots");
-const CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 const MAX_SNAPSHOTS = 12; // Keep last 12 snapshots (~3 days at 6hr intervals)
 
 interface CacheEntry {

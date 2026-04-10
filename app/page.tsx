@@ -137,29 +137,30 @@ export default function Home() {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    // Only fetch if cached data is older than 6 hours (or missing)
+    const SIX_HOURS = 6 * 60 * 60 * 1000;
     const ts = localStorage.getItem("newsglobe-data-ts");
     const age = ts ? Date.now() - parseInt(ts, 10) : Infinity;
-    const SIX_HOURS = 6 * 60 * 60 * 1000;
+    const hasData = !!data;
 
-    if (age >= SIX_HOURS) {
+    // Only fetch if we have NO data, or data is older than 6 hours
+    if (!hasData && age >= SIX_HOURS) {
+      fetchNews();
+    } else if (hasData && age >= SIX_HOURS) {
       fetchNews();
     }
+    // If we have data and it's fresh, do nothing
 
     // Schedule next fetch based on remaining time
-    const firstDelay = age < SIX_HOURS ? SIX_HOURS - age : SIX_HOURS;
-    const firstTimer = setTimeout(() => {
+    const nextFetchIn = age < SIX_HOURS ? SIX_HOURS - age : SIX_HOURS;
+    const timer = setTimeout(() => {
       fetchNews();
-      intervalRef.current = setInterval(() => {
-        fetchNews();
-      }, SIX_HOURS);
-    }, firstDelay);
+    }, nextFetchIn);
 
     return () => {
-      clearTimeout(firstTimer);
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      clearTimeout(timer);
     };
-  }, [fetchNews]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelectCountry = useCallback((code: string | null) => {
     setSelectedCountry(code);

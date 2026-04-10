@@ -109,6 +109,16 @@ export async function POST(request: Request) {
       return NextResponse.json(freshCache);
     }
 
+    // Also return stale cache if it exists -- the client should not be calling this within 6 hours
+    const staleCache = getCachedDataStale();
+    if (staleCache && staleCache.updated_at) {
+      const cacheAge = Date.now() - new Date(staleCache.updated_at).getTime();
+      if (cacheAge < 6 * 60 * 60 * 1000) {
+        console.log("[Summarize] Returning stale cache (still within 6h window)");
+        return NextResponse.json(staleCache);
+      }
+    }
+
     // Build link map for post-processing
     const linkMap = new Map<string, string>();
     for (const h of headlines) {
