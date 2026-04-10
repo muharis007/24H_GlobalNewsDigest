@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Story } from "@/types/news";
 import { SentimentBadge } from "./SentimentBadge";
 
@@ -42,6 +42,14 @@ export default function StoryCard({ story, isLead }: StoryCardProps) {
   const [translating, setTranslating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (speaking) {
+        speechSynthesis.cancel();
+      }
+    };
+  }, [speaking]);
 
   const handleTranslate = async (lang: string) => {
     setTranslating(true);

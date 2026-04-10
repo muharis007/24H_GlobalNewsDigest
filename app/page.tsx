@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
@@ -135,7 +135,7 @@ export default function Home() {
     }
   }, []);
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     const SIX_HOURS = 6 * 60 * 60 * 1000;
     const ts = localStorage.getItem("newsglobe-data-ts");
