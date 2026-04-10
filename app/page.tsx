@@ -132,6 +132,13 @@ export default function Home() {
       setLoading(false);
       setLiveStatus(null);
       setFetchStartedAt(null);
+      // Always record that we attempted a fetch, even on failure,
+      // so we don't retry on every single page reload
+      try {
+        if (!localStorage.getItem("newsglobe-data-ts")) {
+          localStorage.setItem("newsglobe-data-ts", String(Date.now()));
+        }
+      } catch {}
     }
   }, []);
 
@@ -140,12 +147,9 @@ export default function Home() {
     const SIX_HOURS = 6 * 60 * 60 * 1000;
     const ts = localStorage.getItem("newsglobe-data-ts");
     const age = ts ? Date.now() - parseInt(ts, 10) : Infinity;
-    const hasData = !!data;
 
-    // Only fetch if we have NO data, or data is older than 6 hours
-    if (!hasData && age >= SIX_HOURS) {
-      fetchNews();
-    } else if (hasData && age >= SIX_HOURS) {
+    // Only fetch if data is older than 6 hours (or no attempt was ever made)
+    if (age >= SIX_HOURS) {
       fetchNews();
     }
     // If we have data and it's fresh, do nothing

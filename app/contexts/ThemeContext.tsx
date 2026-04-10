@@ -57,8 +57,8 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: DARK_THEME,
-  mode: "dark",
+  theme: LIGHT_THEME,
+  mode: "light",
   toggleMode: () => {},
 });
 
@@ -69,14 +69,12 @@ export function useTheme() {
 const STORAGE_KEY = "newsglobe-theme";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<"light" | "dark">("dark");
+  const [mode, setMode] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "light" || stored === "dark") {
       setMode(stored);
-    } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-      setMode("light");
     }
   }, []);
 
