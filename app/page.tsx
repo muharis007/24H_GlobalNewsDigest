@@ -172,11 +172,14 @@ export default function Home() {
       setLoading(false);
       setLiveStatus(null);
       setFetchStartedAt(null);
-      // Always record that we attempted a fetch, even on failure,
-      // so we don't retry on every single page reload
+      // Only save the timestamp if we actually have data.
+      // If fetch failed and we have nothing, allow retry on next page load.
       try {
-        if (!localStorage.getItem("newsglobe-data-ts")) {
+        if (localStorage.getItem("newsglobe-data")) {
           localStorage.setItem("newsglobe-data-ts", String(Date.now()));
+        } else {
+          // No data — remove stale timestamp so next load retries
+          localStorage.removeItem("newsglobe-data-ts");
         }
       } catch {}
     }
@@ -187,9 +190,10 @@ export default function Home() {
     const SIX_HOURS = 6 * 60 * 60 * 1000;
     const ts = localStorage.getItem("newsglobe-data-ts");
     const age = ts ? Date.now() - parseInt(ts, 10) : Infinity;
+    const hasData = !!localStorage.getItem("newsglobe-data");
 
-    // Only fetch if data is older than 6 hours (or no attempt was ever made)
-    if (age >= SIX_HOURS) {
+    // Fetch if: no data at all, OR data is older than 6 hours
+    if (!hasData || age >= SIX_HOURS) {
       fetchNews();
     }
     // If we have data and it's fresh, do nothing
