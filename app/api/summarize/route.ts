@@ -5,9 +5,7 @@ import { NewsData, Country, Story } from "@/types/news";
 import { RawHeadline } from "@/lib/rss";
 
 export const dynamic = "force-dynamic";
-// On Vercel free tier this is capped at 10s. On Pro it can be up to 60s.
-// If Gemini takes >10s on free tier, the function will timeout and the client should fall back to cached data.
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 function parseLenientJSON(text: string): NewsData | null {
   // Try direct parse

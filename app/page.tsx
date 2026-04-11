@@ -66,7 +66,14 @@ export default function Home() {
 
     try {
       const rssRes = await fetch("/api/rss");
-      const rssData = await rssRes.json();
+      let rssData;
+      try {
+        const rssText = await rssRes.text();
+        rssData = JSON.parse(rssText);
+      } catch {
+        console.error("[NewsGlobe] RSS response not JSON:", rssRes.status);
+        rssData = { error: `Server error (${rssRes.status})`, items: [] };
+      }
 
       if (rssData.error || !rssData.items || rssData.items.length === 0) {
         // Build a diagnostic message from feed results
@@ -100,7 +107,14 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ headlines: rssData.items }),
       });
-      const newsResult = await summaryRes.json();
+      let newsResult;
+      try {
+        const summaryText = await summaryRes.text();
+        newsResult = JSON.parse(summaryText);
+      } catch {
+        console.error("[NewsGlobe] Summarize response not JSON:", summaryRes.status);
+        newsResult = { error: `AI summarization failed (${summaryRes.status})`, countries: [] };
+      }
 
       if (newsResult.error && !newsResult.countries?.length) {
         const cached = await fetch("/api/news/cached");
