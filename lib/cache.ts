@@ -1,7 +1,7 @@
 import { Redis } from "@upstash/redis";
 import { NewsData } from "@/types/news";
 
-const CACHE_TTL = 6 * 60 * 60; // 6 hours in seconds
+const CACHE_TTL = 24 * 60 * 60; // 24 hours in seconds
 const CACHE_KEY = "newsglobe:cache";
 const SNAPSHOTS_KEY = "newsglobe:snapshots";
 const MAX_SNAPSHOTS = 12;
@@ -57,8 +57,8 @@ export async function setCachedData(data: NewsData): Promise<void> {
     const redis = getRedis();
     if (!redis) return;
     const entry: CacheEntry = { data, timestamp: Date.now() };
-    // Store main cache with 24h expiry (stale reads allowed up to 24h, fresh within 6h)
-    await redis.set(CACHE_KEY, entry, { ex: 24 * 60 * 60 });
+    // Store main cache with 7-day expiry (stale reads allowed up to 7 days, fresh within 24h)
+    await redis.set(CACHE_KEY, entry, { ex: 7 * 24 * 60 * 60 });
 
     // Save snapshot
     const snapshot = { timestamp: Date.now(), data };
