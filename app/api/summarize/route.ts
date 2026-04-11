@@ -101,14 +101,14 @@ export async function POST(request: Request) {
     }
 
     // Return fresh server-side cache if available (avoids redundant Gemini calls from multiple visitors)
-    const freshCache = getCachedData();
+    const freshCache = await getCachedData();
     if (freshCache) {
       console.log("[Summarize] Returning fresh server-side cached data");
       return NextResponse.json(freshCache);
     }
 
     // Also return stale cache if it exists -- the client should not be calling this within 6 hours
-    const staleCache = getCachedDataStale();
+    const staleCache = await getCachedDataStale();
     if (staleCache && staleCache.updated_at) {
       const cacheAge = Date.now() - new Date(staleCache.updated_at).getTime();
       if (cacheAge < 6 * 60 * 60 * 1000) {
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
     if (!data) {
       console.error("[Summarize] Failed to parse Gemini response");
       // Return stale cache if available
-      const stale = getCachedDataStale();
+      const stale = await getCachedDataStale();
       if (stale) {
         return NextResponse.json({ ...stale, error: "AI returned malformed data. Showing cached results.", fallback: true });
       }
@@ -178,7 +178,7 @@ export async function POST(request: Request) {
     }
 
     if (!data.updated_at) data.updated_at = new Date().toISOString();
-    setCachedData(data);
+    await setCachedData(data);
 
     return NextResponse.json(data);
   } catch (error) {
@@ -186,7 +186,7 @@ export async function POST(request: Request) {
     console.error("[Summarize] Error:", msg);
 
     const isQuota = msg.includes("429") || msg.includes("quota");
-    const stale = getCachedDataStale();
+    const stale = await getCachedDataStale();
 
     if (stale) {
       return NextResponse.json({

@@ -1,65 +1,71 @@
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "fs";
-import path from "path";
+import { Redis } from "@upstash/redis";
 import { NewsData } from "@/types/news";
 
-const CACHE_FILE = path.join("/tmp", "newsglobe-cache.json");
-const SNAPSHOT_DIR = path.join("/tmp", "newsglobe-snapshots");
-const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
-const MAX_SNAPSHOTS = 12; // Keep last 12 snapshots (~3 days at 6hr intervals)
+const CACHE_TTL = 6 * 60 * 60; // 6 hours in seconds
+const CACHE_KEY = "newsglobe:cache";
+const SNAPSHOTS_KEY = "newsglobe:snapshots";
+const MAX_SNAPSHOTS = 12;
 
 interface CacheEntry {
   data: NewsData;
   timestamp: number;
 }
 
-export function getCachedData(): NewsData | null {
+function getRedis(): Redis | null {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+  return new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+}
+
+// --- Async versions (used by API routes) ---
+
+export async function getCachedData(): Promise<NewsData | null> {
   try {
-    if (!existsSync(CACHE_FILE)) return null;
-    const raw = readFileSync(CACHE_FILE, "utf-8");
-    const entry: CacheEntry = JSON.parse(raw);
-    if (Date.now() - entry.timestamp < CACHE_TTL) {
+    const redis = getRedis();
+    if (!redis) return null;
+    const entry = await redis.get<CacheEntry>(CACHE_KEY);
+    if (!entry) return null;
+    if (Date.now() - entry.timestamp < CACHE_TTL * 1000) {
       return entry.data;
     }
     return null;
-  } catch {
+  } catch (err) {
+    console.error("[Cache] getCachedData error:", err);
     return null;
   }
 }
 
-export function getCachedDataStale(): NewsData | null {
+export async function getCachedDataStale(): Promise<NewsData | null> {
   try {
-    if (!existsSync(CACHE_FILE)) return null;
-    const raw = readFileSync(CACHE_FILE, "utf-8");
-    const entry: CacheEntry = JSON.parse(raw);
+    const redis = getRedis();
+    if (!redis) return null;
+    const entry = await redis.get<CacheEntry>(CACHE_KEY);
+    if (!entry) return null;
     return entry.data;
-  } catch {
+  } catch (err) {
+    console.error("[Cache] getCachedDataStale error:", err);
     return null;
   }
 }
 
-export function setCachedData(data: NewsData): void {
-  const entry: CacheEntry = {
-    data,
-    timestamp: Date.now(),
-  };
-  writeFileSync(CACHE_FILE, JSON.stringify(entry), "utf-8");
-
-  // Save a timestamped snapshot
+export async function setCachedData(data: NewsData): Promise<void> {
   try {
-    const { mkdirSync } = require("fs");
-    if (!existsSync(SNAPSHOT_DIR)) mkdirSync(SNAPSHOT_DIR, { recursive: true });
-    const snapFile = path.join(SNAPSHOT_DIR, `${Date.now()}.json`);
-    writeFileSync(snapFile, JSON.stringify(data), "utf-8");
+    const redis = getRedis();
+    if (!redis) return;
+    const entry: CacheEntry = { data, timestamp: Date.now() };
+    // Store main cache with 24h expiry (stale reads allowed up to 24h, fresh within 6h)
+    await redis.set(CACHE_KEY, entry, { ex: 24 * 60 * 60 });
 
-    // Prune old snapshots
-    const files = readdirSync(SNAPSHOT_DIR).sort();
-    while (files.length > MAX_SNAPSHOTS) {
-      const old = files.shift()!;
-      const { unlinkSync } = require("fs");
-      unlinkSync(path.join(SNAPSHOT_DIR, old));
-    }
-  } catch {
-    // Non-critical, ignore
+    // Save snapshot
+    const snapshot = { timestamp: Date.now(), data };
+    await redis.lpush(SNAPSHOTS_KEY, snapshot);
+    await redis.ltrim(SNAPSHOTS_KEY, 0, MAX_SNAPSHOTS - 1);
+  } catch (err) {
+    console.error("[Cache] setCachedData error:", err);
   }
 }
 
@@ -68,16 +74,14 @@ export interface Snapshot {
   data: NewsData;
 }
 
-export function getSnapshots(): Snapshot[] {
+export async function getSnapshots(): Promise<Snapshot[]> {
   try {
-    if (!existsSync(SNAPSHOT_DIR)) return [];
-    const files = readdirSync(SNAPSHOT_DIR).sort();
-    return files.map((f) => {
-      const ts = parseInt(f.replace(".json", ""), 10);
-      const raw = readFileSync(path.join(SNAPSHOT_DIR, f), "utf-8");
-      return { timestamp: ts, data: JSON.parse(raw) };
-    });
-  } catch {
+    const redis = getRedis();
+    if (!redis) return [];
+    const snapshots = await redis.lrange<Snapshot>(SNAPSHOTS_KEY, 0, MAX_SNAPSHOTS - 1);
+    return snapshots || [];
+  } catch (err) {
+    console.error("[Cache] getSnapshots error:", err);
     return [];
   }
 }

@@ -13,7 +13,7 @@ export async function GET(request: Request) {
 
   // Check cache first
   if (!forceRefresh) {
-    const cached = getCachedData();
+    const cached = await getCachedData();
     if (cached) {
       return NextResponse.json(cached);
     }
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     console.log(`[NewsGlobe] Got ${headlines.length} headlines`);
 
     if (headlines.length === 0) {
-      const stale = getCachedDataStale();
+      const stale = await getCachedDataStale();
       if (stale) {
         return NextResponse.json(stale);
       }
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
     }
 
     // Cache the result
-    setCachedData(data);
+    await setCachedData(data);
 
     return NextResponse.json(data);
   } catch (error) {
@@ -106,7 +106,7 @@ export async function GET(request: Request) {
     const isQuotaError = msg.includes("429") || msg.includes("quota");
 
     // Try to return stale cache on error
-    const stale = getCachedDataStale();
+    const stale = await getCachedDataStale();
     if (stale) {
       return NextResponse.json({
         ...stale,

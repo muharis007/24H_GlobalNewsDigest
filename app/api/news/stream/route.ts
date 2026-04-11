@@ -21,7 +21,7 @@ export async function GET() {
 
       try {
         // Check cache first
-        const cached = getCachedData();
+        const cached = await getCachedData();
         if (cached) {
           send("status", { step: "cache-hit", message: "Using cached data" });
           send("done", cached);
@@ -34,7 +34,7 @@ export async function GET() {
         send("status", { step: "rss-done", message: `Got ${headlines.length} headlines` });
 
         if (headlines.length === 0) {
-          const stale = getCachedDataStale();
+          const stale = await getCachedDataStale();
           send("done", stale ?? { countries: [], updated_at: new Date().toISOString() });
           controller.close();
           return;
@@ -88,14 +88,14 @@ export async function GET() {
         }
 
         if (!data.updated_at) data.updated_at = new Date().toISOString();
-        setCachedData(data);
+        await setCachedData(data);
 
         send("done", data);
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         const isQuota = msg.includes("429") || msg.includes("quota");
 
-        const stale = getCachedDataStale();
+        const stale = await getCachedDataStale();
         if (stale) {
           send("done", {
             ...stale,

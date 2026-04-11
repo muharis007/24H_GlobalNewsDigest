@@ -4,7 +4,7 @@ import { getSnapshots } from "@/lib/cache";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const snapshots = getSnapshots();
+  const snapshots = await getSnapshots();
   return NextResponse.json({
     snapshots: snapshots.map((s) => ({
       timestamp: s.timestamp,
