@@ -5,7 +5,7 @@ import { getCachedData, getCachedDataStale, setCachedData } from "@/lib/cache";
 import { NewsData } from "@/types/news";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 10;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   try {
     // Fetch all RSS feeds
     console.log("[NewsGlobe] Fetching RSS feeds...");
-    const headlines = await fetchAllFeeds();
+    const { items: headlines } = await fetchAllFeeds();
     console.log(`[NewsGlobe] Got ${headlines.length} headlines`);
 
     if (headlines.length === 0) {

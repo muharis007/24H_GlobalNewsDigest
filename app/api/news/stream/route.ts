@@ -30,7 +30,7 @@ export async function GET() {
         }
 
         send("status", { step: "rss", message: "Fetching RSS feeds..." });
-        const headlines = await fetchAllFeeds();
+        const { items: headlines } = await fetchAllFeeds();
         send("status", { step: "rss-done", message: `Got ${headlines.length} headlines` });
 
         if (headlines.length === 0) {

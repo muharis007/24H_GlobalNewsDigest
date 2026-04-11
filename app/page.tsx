@@ -69,6 +69,14 @@ export default function Home() {
       const rssData = await rssRes.json();
 
       if (rssData.error || !rssData.items || rssData.items.length === 0) {
+        // Build a diagnostic message from feed results
+        const feedInfo = rssData.feedResults
+          ? rssData.feedResults.map((f: { source: string; status: string; error?: string }) =>
+              `${f.source}: ${f.status}${f.error ? ` (${f.error})` : ""}`
+            ).join(", ")
+          : rssData.error || "No items returned";
+        console.error("[NewsGlobe] RSS failed:", feedInfo);
+
         const cached = await fetch("/api/news/cached");
         if (cached.ok) {
           const cachedData = await cached.json();

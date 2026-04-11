@@ -1,9 +1,10 @@
 import Parser from "rss-parser";
 
 const parser = new Parser({
-  timeout: 10000,
+  timeout: 7000,
   headers: {
-    "User-Agent": "NewsGlobe/1.0",
+    "User-Agent":
+      "Mozilla/5.0 (compatible; NewsGlobe/1.0; +https://newsglobe.vercel.app)",
   },
 });
 
@@ -30,14 +31,22 @@ function isWithin24Hours(item: { pubDate?: string; isoDate?: string }): boolean 
   return date.getTime() > twentyFourHoursAgo;
 }
 
-async function fetchFeedWithTimeout(url: string, timeoutMs = 10000): Promise<Parser.Output<Record<string, unknown>>> {
+async function fetchFeedWithTimeout(url: string, timeoutMs = 7000): Promise<Parser.Output<Record<string, unknown>>> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": "NewsGlobe/1.0" },
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; NewsGlobe/1.0; +https://newsglobe.vercel.app)",
+        Accept: "application/rss+xml, application/xml, text/xml, */*",
+      },
+      cache: "no-store",
     });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ${response.statusText}`);
+    }
     const text = await response.text();
     return await parser.parseString(text);
   } finally {
@@ -45,12 +54,21 @@ async function fetchFeedWithTimeout(url: string, timeoutMs = 10000): Promise<Par
   }
 }
 
-export async function fetchAllFeeds(): Promise<RawHeadline[]> {
+interface FeedResult {
+  source: string;
+  status: "ok" | "error";
+  count: number;
+  error?: string;
+}
+
+export async function fetchAllFeeds(): Promise<{ items: RawHeadline[]; feedResults: FeedResult[] }> {
+  const feedResults: FeedResult[] = [];
+
   const results = await Promise.allSettled(
     RSS_SOURCES.map(async (src) => {
       try {
         const feed = await fetchFeedWithTimeout(src.url);
-        return (feed.items || [])
+        const items = (feed.items || [])
           .filter((item) => isWithin24Hours(item))
           .map((item) => ({
             title: item.title || "",
@@ -59,8 +77,12 @@ export async function fetchAllFeeds(): Promise<RawHeadline[]> {
             source: src.name,
             link: item.link || "",
           }));
+        feedResults.push({ source: src.name, status: "ok", count: items.length });
+        return items;
       } catch (err) {
-        console.error(`[RSS] Failed to fetch ${src.name} (${src.url}):`, err instanceof Error ? err.message : err);
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error(`[RSS] Failed to fetch ${src.name} (${src.url}):`, errMsg);
+        feedResults.push({ source: src.name, status: "error", count: 0, error: errMsg });
         return [];
       }
     })
@@ -73,5 +95,6 @@ export async function fetchAllFeeds(): Promise<RawHeadline[]> {
     }
   }
 
-  return headlines;
+  console.log("[RSS] Feed results:", JSON.stringify(feedResults));
+  return { items: headlines, feedResults };
 }

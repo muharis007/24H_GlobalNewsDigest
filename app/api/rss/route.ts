@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import path from "path";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 15;
+export const maxDuration = 10;
 
 const RSS_CACHE_FILE = path.join("/tmp", "newsglobe", "rss-cache.json");
 const RSS_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
@@ -43,10 +43,12 @@ export async function GET() {
     }
 
     // Fetch fresh
-    const items = await fetchAllFeeds();
-    setCachedRSS(items);
+    const { items, feedResults } = await fetchAllFeeds();
+    if (items.length > 0) {
+      setCachedRSS(items);
+    }
 
-    return NextResponse.json({ items, cached: false, count: items.length });
+    return NextResponse.json({ items, cached: false, count: items.length, feedResults });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[RSS] Error:", msg);
