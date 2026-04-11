@@ -4,39 +4,28 @@ import { Redis } from "@upstash/redis";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL || "";
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+
+  const info = {
+    urlLen: url.length,
+    tokenLen: token.length,
+    urlFirst: url.charAt(0),
+    urlLast: url.charAt(url.length - 1),
+    tokenFirst: token.charAt(0),
+    tokenLast: token.charAt(token.length - 1),
+    urlStart: url.substring(0, 15),
+  };
 
   if (!url || !token) {
-    return NextResponse.json({ error: "Missing env vars" });
+    return NextResponse.json({ ...info, error: "Missing env vars" });
   }
 
   try {
-    const redis = new Redis({ url, token });
-
-    // Debug: check for accidental quotes/whitespace in env vars
-    const urlLen = url.length;
-    const tokenLen = token.length;
-    const urlFirstChar = url.charAt(0);
-    const urlLastChar = url.charAt(url.length - 1);
-    const tokenFirstChar = token.charAt(0);
-    const tokenLastChar = token.charAt(token.length - 1);
-
+    const redis = new Redis({ url: url.trim(), token: token.trim() });
     const ping = await redis.ping();
-    const entry = await redis.get("newsglobe:cache");
-    
-    return NextResponse.json({
-      urlLen, tokenLen,
-      urlFirstChar, urlLastChar,
-      tokenFirstChar, tokenLastChar,
-      ping,
-      hasEntry: !!entry,
-      entryType: typeof entry,
-      hasData: !!(entry as any)?.data,
-      hasTimestamp: !!(entry as any)?.timestamp,
-      countries: (entry as any)?.data?.countries?.length ?? 0,
-    });
+    return NextResponse.json({ ...info, ping, status: "connected" });
   } catch (err) {
-    return NextResponse.json({ error: String(err) });
+    return NextResponse.json({ ...info, error: String(err) });
   }
 }
