@@ -61,10 +61,28 @@ export default function Home() {
   const fetchNews = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setLiveStatus("Fetching RSS feeds...");
+    setLiveStatus("Checking for cached news...");
     setFetchStartedAt(Date.now());
 
     try {
+      // Step 1: Check server-side cache first (Redis) — avoids unnecessary RSS + Gemini calls
+      try {
+        const cachedRes = await fetch("/api/news/cached");
+        if (cachedRes.ok) {
+          const cachedText = await cachedRes.text();
+          const cachedData = JSON.parse(cachedText);
+          if (cachedData.countries?.length > 0) {
+            setData(cachedData);
+            try { localStorage.setItem("newsglobe-data", JSON.stringify(cachedData)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
+            return;
+          }
+        }
+      } catch {
+        // Cache check failed, proceed with full fetch
+      }
+
+      // Step 2: No cached data — fetch RSS feeds
+      setLiveStatus("Fetching RSS feeds...");
       const rssRes = await fetch("/api/rss");
       let rssData;
       try {
