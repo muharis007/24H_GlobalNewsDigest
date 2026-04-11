@@ -20,25 +20,7 @@ import { NewsData } from "@/types/news";
 const Map = dynamic(() => import("./components/Map"), { ssr: false });
 
 export default function Home() {
-  const [data, setData] = useState<NewsData | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const stored = localStorage.getItem("newsglobe-data");
-      const ts = localStorage.getItem("newsglobe-data-ts");
-      if (stored && ts) {
-        const age = Date.now() - parseInt(ts, 10);
-        if (age > 48 * 60 * 60 * 1000) {
-          localStorage.removeItem("newsglobe-data");
-          localStorage.removeItem("newsglobe-data-ts");
-          return null;
-        }
-        return JSON.parse(stored);
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  });
+  const [data, setData] = useState<NewsData | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +55,6 @@ export default function Home() {
           const cachedData = JSON.parse(cachedText);
           if (cachedData.countries?.length > 0) {
             setData(cachedData);
-            try { localStorage.setItem("newsglobe-data", JSON.stringify(cachedData)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
             return;
           }
         }
@@ -107,7 +88,6 @@ export default function Home() {
           const cachedData = await cached.json();
           if (cachedData.countries?.length > 0) {
             setData(cachedData);
-            try { localStorage.setItem("newsglobe-data", JSON.stringify(cachedData)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
             setError("Could not reach news sources. Showing cached data.");
           } else {
             setError("Could not reach news sources. Check your connection.");
@@ -140,7 +120,6 @@ export default function Home() {
           const cachedData = await cached.json();
           if (cachedData.countries?.length > 0) {
             setData(cachedData);
-            try { localStorage.setItem("newsglobe-data", JSON.stringify(cachedData)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
           }
         }
         setError(newsResult.error);
@@ -153,7 +132,6 @@ export default function Home() {
 
       if (newsResult.countries?.length > 0) {
         setData(newsResult);
-        try { localStorage.setItem("newsglobe-data", JSON.stringify(newsResult)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
@@ -163,7 +141,6 @@ export default function Home() {
           const cachedData = await cached.json();
           if (cachedData.countries?.length > 0) {
             setData(cachedData);
-            try { localStorage.setItem("newsglobe-data", JSON.stringify(cachedData)); localStorage.setItem("newsglobe-data-ts", String(Date.now())); } catch {}
           }
         }
       } catch {}
@@ -172,41 +149,18 @@ export default function Home() {
       setLoading(false);
       setLiveStatus(null);
       setFetchStartedAt(null);
-      // Only save the timestamp if we actually have data.
-      // If fetch failed and we have nothing, allow retry on next page load.
-      try {
-        if (localStorage.getItem("newsglobe-data")) {
-          localStorage.setItem("newsglobe-data-ts", String(Date.now()));
-        } else {
-          // No data — remove stale timestamp so next load retries
-          localStorage.removeItem("newsglobe-data-ts");
-        }
-      } catch {}
     }
   }, []);
 
 
   useEffect(() => {
+    fetchNews();
+
+    // Re-fetch every 6 hours while the tab is open
     const SIX_HOURS = 6 * 60 * 60 * 1000;
-    const ts = localStorage.getItem("newsglobe-data-ts");
-    const age = ts ? Date.now() - parseInt(ts, 10) : Infinity;
-    const hasData = !!localStorage.getItem("newsglobe-data");
+    const timer = setInterval(fetchNews, SIX_HOURS);
 
-    // Fetch if: no data at all, OR data is older than 6 hours
-    if (!hasData || age >= SIX_HOURS) {
-      fetchNews();
-    }
-    // If we have data and it's fresh, do nothing
-
-    // Schedule next fetch based on remaining time
-    const nextFetchIn = age < SIX_HOURS ? SIX_HOURS - age : SIX_HOURS;
-    const timer = setTimeout(() => {
-      fetchNews();
-    }, nextFetchIn);
-
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearInterval(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
