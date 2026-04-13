@@ -52,9 +52,10 @@ export async function summarizeNews(headlines: string): Promise<string> {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+  const models = ["gemini-2.0-flash", "gemini-2.5-flash"];
+  const PER_CALL_TIMEOUT = 25_000; // 25s per call to stay within serverless limits
 
-  // Retry up to 3 times with exponential backoff, falling back to alternate models
+  // Retry with exponential backoff, falling back to alternate models
   let lastError: Error | null = null;
   for (const modelName of models) {
     const model = genAI.getGenerativeModel({ model: modelName });
@@ -66,7 +67,12 @@ export async function summarizeNews(headlines: string): Promise<string> {
           await new Promise((r) => setTimeout(r, delay));
         }
         console.log(`[Gemini] Trying model: ${modelName}, attempt ${attempt + 1}`);
-        const result = await model.generateContent(PROMPT + headlines);
+        const result = await Promise.race([
+          model.generateContent(PROMPT + headlines),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout after ${PER_CALL_TIMEOUT}ms`)), PER_CALL_TIMEOUT)
+          ),
+        ]);
         const text = result.response.text();
         return text;
       } catch (err) {
@@ -76,7 +82,7 @@ export async function summarizeNews(headlines: string): Promise<string> {
         if (lastError.message.includes("API_KEY_INVALID") || lastError.message.includes("API key expired") || lastError.message.includes("401") || lastError.message.includes("403")) {
           throw lastError;
         }
-        if (!lastError.message.includes("503") && !lastError.message.includes("429") && !lastError.message.includes("high demand")) {
+        if (!lastError.message.includes("503") && !lastError.message.includes("429") && !lastError.message.includes("high demand") && !lastError.message.includes("Timeout")) {
           break; // Don't retry non-transient errors on this model, try next model
         }
       }
