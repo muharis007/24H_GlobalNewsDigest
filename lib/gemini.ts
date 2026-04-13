@@ -52,39 +52,34 @@ export async function summarizeNews(headlines: string): Promise<string> {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const models = ["gemini-2.0-flash", "gemini-2.5-flash"];
-  const PER_CALL_TIMEOUT = 25_000; // 25s per call to stay within serverless limits
+  // Use only gemini-2.0-flash — fastest model, fits within Vercel Hobby 10s limit
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const PER_CALL_TIMEOUT = 8_000; // 8s to stay within Vercel Hobby 10s function limit
 
-  // Retry with exponential backoff, falling back to alternate models
   let lastError: Error | null = null;
-  for (const modelName of models) {
-    const model = genAI.getGenerativeModel({ model: modelName });
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        if (attempt > 0) {
-          const delay = Math.pow(2, attempt) * 1000;
-          console.log(`[Gemini] Retry ${attempt} on ${modelName}, waiting ${delay}ms...`);
-          await new Promise((r) => setTimeout(r, delay));
-        }
-        console.log(`[Gemini] Trying model: ${modelName}, attempt ${attempt + 1}`);
-        const result = await Promise.race([
-          model.generateContent(PROMPT + headlines),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`Timeout after ${PER_CALL_TIMEOUT}ms`)), PER_CALL_TIMEOUT)
-          ),
-        ]);
-        const text = result.response.text();
-        return text;
-      } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
-        console.error(`[Gemini] ${modelName} attempt ${attempt + 1} failed:`, lastError.message);
-        // Don't retry or try other models for auth/key errors
-        if (lastError.message.includes("API_KEY_INVALID") || lastError.message.includes("API key expired") || lastError.message.includes("401") || lastError.message.includes("403")) {
-          throw lastError;
-        }
-        if (!lastError.message.includes("503") && !lastError.message.includes("429") && !lastError.message.includes("high demand") && !lastError.message.includes("Timeout")) {
-          break; // Don't retry non-transient errors on this model, try next model
-        }
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`[Gemini] Retry attempt ${attempt + 1}...`);
+      }
+      console.log(`[Gemini] gemini-2.0-flash attempt ${attempt + 1}`);
+      const result = await Promise.race([
+        model.generateContent(PROMPT + headlines),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), PER_CALL_TIMEOUT)
+        ),
+      ]);
+      const text = result.response.text();
+      return text;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      console.error(`[Gemini] attempt ${attempt + 1} failed:`, lastError.message);
+      if (lastError.message.includes("API_KEY_INVALID") || lastError.message.includes("API key expired") || lastError.message.includes("401") || lastError.message.includes("403")) {
+        throw lastError;
+      }
+      // Only retry on transient errors
+      if (!lastError.message.includes("503") && !lastError.message.includes("429") && !lastError.message.includes("Timeout")) {
+        break;
       }
     }
   }

@@ -123,8 +123,8 @@ export async function POST(request: Request) {
       if (h.link) linkMap.set(h.title.toLowerCase().trim(), h.link);
     }
 
-    // Format headlines for Gemini (cap at 30)
-    const capped = headlines.slice(0, 30);
+    // Format headlines for Gemini (cap at 15 to fit within Vercel Hobby 10s limit)
+    const capped = headlines.slice(0, 15);
     const formatHeadlines = (items: RawHeadline[]) =>
       items.map((h, i) => `${i + 1}. [${h.source}] ${h.title}\n   ${h.description}`).join("\n\n");
 
@@ -134,8 +134,8 @@ export async function POST(request: Request) {
       rawResponse = await summarizeNews(formatHeadlines(capped));
     } catch {
       // If full batch fails, try with fewer headlines
-      console.log("[Summarize] Full batch failed, trying with 15 headlines...");
-      const smaller = headlines.slice(0, 15);
+      console.log("[Summarize] Full batch failed, trying with 8 headlines...");
+      const smaller = headlines.slice(0, 8);
       rawResponse = await summarizeNews(formatHeadlines(smaller));
     }
 

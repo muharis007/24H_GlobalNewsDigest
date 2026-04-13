@@ -35,8 +35,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Format headlines for Gemini (cap at 30 to stay within rate limits)
-    const capped = headlines.slice(0, 30);
+    // Format headlines for Gemini (cap at 15 to stay within rate limits)
+    const capped = headlines.slice(0, 15);
     const formatHeadlines = (items: typeof capped) =>
       items.map((h, i) => `${i + 1}. [${h.source}] ${h.title}\n   ${h.description}`).join("\n\n");
 

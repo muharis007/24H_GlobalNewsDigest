@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ status: "error", reason: "no_headlines" });
     }
 
-    const capped = headlines.slice(0, 30);
+    const capped = headlines.slice(0, 15);
     const formatted = capped
       .map((h, i) => `${i + 1}. [${h.source}] ${h.title}\n   ${h.description}`)
       .join("\n\n");
