@@ -1,12 +1,18 @@
 export type Category = "politics" | "conflict" | "economy" | "sports" | "tech" | "health" | "other";
 export type Sentiment = "positive" | "negative" | "neutral";
 
+export interface StoryLink {
+  source: string;
+  url: string;
+}
+
 export interface Story {
   headline: string;
   summary: string;
   source: string;
   category: Category;
   link?: string;
+  links?: StoryLink[];
   breaking?: boolean;
   sentiment?: Sentiment;
 }

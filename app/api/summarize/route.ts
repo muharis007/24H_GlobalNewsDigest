@@ -41,7 +41,19 @@ function deduplicateStories(countries: Country[]): Country[] {
         if (!existing.source.includes(story.source)) {
           existing.source += `, ${story.source}`;
         }
+        // Merge links from the duplicate story
+        if (!existing.links) existing.links = [];
+        if (story.link) {
+          existing.links.push({ source: story.source, url: story.link });
+        }
+        if (story.links) {
+          existing.links.push(...story.links);
+        }
         return acc;
+      }
+      // Initialize links from the story's own link
+      if (story.link && !story.links?.length) {
+        story.links = [{ source: story.source, url: story.link }];
       }
       return [...acc, story];
     }, [])
@@ -119,8 +131,13 @@ export async function POST(request: Request) {
 
     // Build link map for post-processing
     const linkMap = new Map<string, string>();
+    const sourceLinkMap = new Map<string, { title: string; link: string }[]>();
     for (const h of headlines) {
-      if (h.link) linkMap.set(h.title.toLowerCase().trim(), h.link);
+      if (h.link) {
+        linkMap.set(h.title.toLowerCase().trim(), h.link);
+        if (!sourceLinkMap.has(h.source)) sourceLinkMap.set(h.source, []);
+        sourceLinkMap.get(h.source)!.push({ title: h.title.toLowerCase().trim(), link: h.link });
+      }
     }
 
     // Format headlines for Gemini (cap at 15 to fit within Vercel Hobby 10s limit)
@@ -164,15 +181,51 @@ export async function POST(request: Request) {
     for (const country of data.countries) {
       for (const story of country.stories) {
         const key = story.headline.toLowerCase().trim();
-        if (linkMap.has(key)) {
-          story.link = linkMap.get(key);
-        } else {
-          for (const [title, link] of Array.from(linkMap.entries())) {
-            if (key.includes(title.substring(0, 30)) || title.includes(key.substring(0, 30))) {
-              story.link = link;
-              break;
+        const sources = story.source.split(/,\s*/);
+        const foundLinks: { source: string; url: string }[] = [];
+
+        for (const src of sources) {
+          const srcEntries = sourceLinkMap.get(src);
+          if (srcEntries) {
+            const exact = srcEntries.find(e => e.title === key);
+            if (exact) {
+              foundLinks.push({ source: src, url: exact.link });
+              continue;
+            }
+            const partial = srcEntries.find(e =>
+              key.includes(e.title.substring(0, 30)) || e.title.includes(key.substring(0, 30))
+            );
+            if (partial) {
+              foundLinks.push({ source: src, url: partial.link });
             }
           }
+        }
+
+        // Fallback: try the old linkMap approach if no links found
+        if (foundLinks.length === 0) {
+          if (linkMap.has(key)) {
+            foundLinks.push({ source: sources[0], url: linkMap.get(key)! });
+          } else {
+            for (const [title, link] of Array.from(linkMap.entries())) {
+              if (key.includes(title.substring(0, 30)) || title.includes(key.substring(0, 30))) {
+                foundLinks.push({ source: sources[0], url: link });
+                break;
+              }
+            }
+          }
+        }
+
+        if (foundLinks.length > 0) {
+          story.link = foundLinks[0].url;
+          // Merge with any links already set during deduplication
+          const existing = story.links || [];
+          const allLinks = [...existing, ...foundLinks];
+          const seen = new Set<string>();
+          story.links = allLinks.filter(l => {
+            if (seen.has(l.url)) return false;
+            seen.add(l.url);
+            return true;
+          });
         }
       }
     }

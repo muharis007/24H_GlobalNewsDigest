@@ -42,6 +42,7 @@ export default function StoryCard({ story, isLead }: StoryCardProps) {
   const [translating, setTranslating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [showSources, setShowSources] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -110,12 +111,42 @@ export default function StoryCard({ story, isLead }: StoryCardProps) {
       </p>
 
       {/* Source attribution — right-aligned small caps */}
-      <div className="flex items-center justify-end gap-2 mt-2">
+      <div className="flex items-center justify-end gap-2 mt-2 relative">
         <span className="source-dot" style={{ background: sourceColor }} />
         <span className="font-data text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--text-dim)" }}>
           {story.source}
         </span>
-        {story.link && (
+        {story.links && story.links.length > 1 ? (
+          <>
+            <span style={{ color: "var(--border)" }}>|</span>
+            <button
+              onClick={() => setShowSources(!showSources)}
+              className="font-data text-[10px] uppercase tracking-[0.05em] hover:opacity-70 transition-opacity"
+              style={{ color: "var(--accent)" }}
+            >
+              Read more ▾
+            </button>
+            {showSources && (
+              <div
+                className="absolute right-0 top-full mt-1 z-10 rounded shadow-lg py-1 min-w-[160px]"
+                style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+              >
+                {story.links.map((l) => (
+                  <a
+                    key={l.url}
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.05em] hover:opacity-70 transition-opacity"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    {l.source}
+                  </a>
+                ))}
+              </div>
+            )}
+          </>
+        ) : story.link ? (
           <>
             <span style={{ color: "var(--border)" }}>|</span>
             <a
@@ -128,7 +159,7 @@ export default function StoryCard({ story, isLead }: StoryCardProps) {
               Read more
             </a>
           </>
-        )}
+        ) : null}
       </div>
 
       {/* Actions row */}

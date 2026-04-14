@@ -46,8 +46,13 @@ export async function GET() {
 
         // Build link map
         const linkMap = new Map<string, string>();
+        const sourceLinkMap = new Map<string, { title: string; link: string }[]>();
         for (const h of headlines) {
-          if (h.link) linkMap.set(h.title.toLowerCase().trim(), h.link);
+          if (h.link) {
+            linkMap.set(h.title.toLowerCase().trim(), h.link);
+            if (!sourceLinkMap.has(h.source)) sourceLinkMap.set(h.source, []);
+            sourceLinkMap.get(h.source)!.push({ title: h.title.toLowerCase().trim(), link: h.link });
+          }
         }
 
         send("status", { step: "ai", message: "Analyzing with Gemini AI..." });
@@ -73,16 +78,48 @@ export async function GET() {
         for (const country of data.countries) {
           for (const story of country.stories) {
             const key = story.headline.toLowerCase().trim();
-            if (linkMap.has(key)) {
-              story.link = linkMap.get(key);
-            } else {
-              const entries = Array.from(linkMap.entries());
-              for (const [title, link] of entries) {
-                if (key.includes(title.substring(0, 30)) || title.includes(key.substring(0, 30))) {
-                  story.link = link;
-                  break;
+            const sources = story.source.split(/,\s*/);
+            const foundLinks: { source: string; url: string }[] = [];
+
+            for (const src of sources) {
+              const srcEntries = sourceLinkMap.get(src);
+              if (srcEntries) {
+                const exact = srcEntries.find(e => e.title === key);
+                if (exact) {
+                  foundLinks.push({ source: src, url: exact.link });
+                  continue;
+                }
+                const partial = srcEntries.find(e =>
+                  key.includes(e.title.substring(0, 30)) || e.title.includes(key.substring(0, 30))
+                );
+                if (partial) {
+                  foundLinks.push({ source: src, url: partial.link });
                 }
               }
+            }
+
+            if (foundLinks.length === 0) {
+              if (linkMap.has(key)) {
+                foundLinks.push({ source: sources[0], url: linkMap.get(key)! });
+              } else {
+                const entries = Array.from(linkMap.entries());
+                for (const [title, link] of entries) {
+                  if (key.includes(title.substring(0, 30)) || title.includes(key.substring(0, 30))) {
+                    foundLinks.push({ source: sources[0], url: link });
+                    break;
+                  }
+                }
+              }
+            }
+
+            if (foundLinks.length > 0) {
+              story.link = foundLinks[0].url;
+              const seen = new Set<string>();
+              story.links = foundLinks.filter(l => {
+                if (seen.has(l.url)) return false;
+                seen.add(l.url);
+                return true;
+              });
             }
           }
         }
