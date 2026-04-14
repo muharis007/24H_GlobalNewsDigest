@@ -1,7 +1,7 @@
 import { Redis } from "@upstash/redis";
 import { NewsData } from "@/types/news";
 
-const CACHE_TTL = 24 * 60 * 60; // 24 hours in seconds
+const CACHE_TTL = 5 * 60 * 60; // 5 hours in seconds (1h buffer before 6h cron cycle)
 const CACHE_KEY = "newsglobe:cache";
 const SNAPSHOTS_KEY = "newsglobe:snapshots";
 const MAX_SNAPSHOTS = 12;
